@@ -1,0 +1,17 @@
+{
+  "name": "health-planner-backend",
+  "version": "1.0.0",
+  "description": "Backend services and database configs for Health Planner",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "node dist/index.js",
+    "build": "tsc",
+    "dev": "ts-node src/index.ts"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  },
+  "private": true
+}
