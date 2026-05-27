@@ -100,7 +100,7 @@ export default function MealPlannerScreen() {
   ];
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: any;
     if (isGenerating) {
       interval = setInterval(() => {
         setLoadingStep((prev) => {
@@ -806,7 +806,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#1E293B',
     outlineStyle: 'none',
-  },
+  } as any,
   optionsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -859,7 +859,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#1E293B',
     outlineStyle: 'none',
-  },
+  } as any,
   helperText: {
     fontSize: 11,
     color: '#64748B',

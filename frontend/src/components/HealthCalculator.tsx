@@ -201,7 +201,7 @@ export default function HealthCalculator({ onSaveProfile, savedProfile }: Health
         </View>
 
         {/* ระดับกิจกรรม Dropdown */}
-        <View style={styles.formGroup}>
+        <View style={[styles.formGroup, showActivityMenu && { zIndex: 10, position: 'relative' }]}>
           <Text style={styles.label}>ระดับกิจกรรมประจำวัน</Text>
           <Pressable
             style={styles.dropdownTrigger}

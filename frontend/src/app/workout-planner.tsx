@@ -82,7 +82,7 @@ export default function WorkoutPlannerScreen() {
   ];
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: any;
     if (isGenerating) {
       interval = setInterval(() => {
         setLoadingStep((prev) => {
@@ -911,7 +911,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#1E293B',
     outlineStyle: 'none',
-  },
+  } as any,
   quickTags: {
     flexDirection: 'row',
     flexWrap: 'wrap',

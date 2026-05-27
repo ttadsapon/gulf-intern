@@ -15,21 +15,25 @@ interface WeightEntry {
 
 interface WeightChartProps {
   weightHistory: WeightEntry[];
-  onAddWeight: (weight: number) => void;
+  weight: string;
+  bodyFat: string;
+  muscle: string;
+  onChangeWeight: (val: string) => void;
+  onChangeBodyFat: (val: string) => void;
+  onChangeMuscle: (val: string) => void;
+  onUpdateStats: () => void;
 }
 
-export default function WeightChart({ weightHistory, onAddWeight }: WeightChartProps) {
-  const [newWeight, setNewWeight] = useState('');
-
-  const handleWeightSubmit = () => {
-    const w = parseFloat(newWeight);
-    if (!w || isNaN(w)) {
-      alert('กรุณากรอกน้ำหนักตัวที่ถูกต้องด้วยครับ');
-      return;
-    }
-    onAddWeight(w);
-    setNewWeight('');
-  };
+export default function WeightChart({
+  weightHistory,
+  weight,
+  bodyFat,
+  muscle,
+  onChangeWeight,
+  onChangeBodyFat,
+  onChangeMuscle,
+  onUpdateStats,
+}: WeightChartProps) {
 
   const renderChart = () => {
     if (!weightHistory || weightHistory.length === 0) {
@@ -75,25 +79,49 @@ export default function WeightChart({ weightHistory, onAddWeight }: WeightChartP
     <View style={styles.card}>
       <View style={styles.headerRow}>
         <Text style={styles.icon}>⚖️</Text>
-        <Text style={styles.title}>แนวโน้มน้ำหนักตัว</Text>
+        <Text style={styles.title}>แนวโน้มน้ำหนักและมวลร่างกาย</Text>
       </View>
 
       <View style={styles.chartWrapper}>
         {renderChart()}
       </View>
 
-      <View style={styles.inputRow}>
-        <TextInput
-          style={styles.input}
-          keyboardType="numeric"
-          placeholder="กก."
-          value={newWeight}
-          onChangeText={setNewWeight}
-        />
-        <Pressable style={styles.saveBtn} onPress={handleWeightSubmit}>
-          <Text style={styles.saveBtnText}>บันทึก</Text>
-        </Pressable>
+      <View style={styles.statsInputRow}>
+        <View style={styles.inputCol}>
+          <Text style={styles.inputLabel}>น้ำหนัก (kg)</Text>
+          <TextInput
+            style={styles.textInput}
+            keyboardType="numeric"
+            placeholder="เช่น 70"
+            value={weight || ''}
+            onChangeText={onChangeWeight}
+          />
+        </View>
+        <View style={styles.inputCol}>
+          <Text style={styles.inputLabel}>ไขมัน (%)</Text>
+          <TextInput
+            style={styles.textInput}
+            keyboardType="numeric"
+            placeholder="เช่น 20"
+            value={bodyFat || ''}
+            onChangeText={onChangeBodyFat}
+          />
+        </View>
+        <View style={styles.inputCol}>
+          <Text style={styles.inputLabel}>กล้ามเนื้อ (kg)</Text>
+          <TextInput
+            style={styles.textInput}
+            keyboardType="numeric"
+            placeholder="เช่น 30"
+            value={muscle || ''}
+            onChangeText={onChangeMuscle}
+          />
+        </View>
       </View>
+
+      <Pressable style={styles.saveBtn} onPress={onUpdateStats}>
+        <Text style={styles.saveBtnText}>💾 อัปเดตและคำนวณจัดอันดับ</Text>
+      </Pressable>
     </View>
   );
 }
@@ -180,32 +208,41 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginTop: 6,
   },
-  inputRow: {
+  statsInputRow: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 10,
+    marginBottom: 12,
   },
-  input: {
+  inputCol: {
     flex: 1,
-    height: 38,
+    gap: 4,
+  },
+  inputLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#64748B',
+  },
+  textInput: {
     backgroundColor: '#F8FAFC',
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    borderRadius: 10,
-    paddingHorizontal: 12,
+    borderRadius: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
     fontSize: 12,
+    fontWeight: '700',
     color: '#1E293B',
     outlineStyle: 'none',
   } as any,
   saveBtn: {
     backgroundColor: '#2563EB',
-    borderRadius: 10,
-    paddingHorizontal: 16,
-    justifyContent: 'center',
+    borderRadius: 8,
+    paddingVertical: 8,
     alignItems: 'center',
-    height: 38,
+    justifyContent: 'center',
   },
   saveBtnText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '800',
     color: '#FFFFFF',
   },

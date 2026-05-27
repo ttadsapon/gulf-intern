@@ -655,7 +655,7 @@ export default function HomeScreen() {
 
   // คำนวณสรุปผลโภชนาการประจำวัน
   const currentMeals = twoWeekMealPlan?.[activeWeek]?.[activeDay] || weeklyMeals[activeDay] || [null, null, null, null];
-  const totalCalories = currentMeals.reduce((sum, meal) => sum + (meal ? meal.calories : 0), 0);
+  const totalCalories = currentMeals.reduce((sum: number, meal: any) => sum + (meal ? meal.calories : 0), 0);
   const currentWater = waterIntake[activeDay] || 0;
   const targetCalories = userProfile?.targetCalories || 2000;
 
@@ -663,7 +663,7 @@ export default function HomeScreen() {
   const currentWorkoutPlan = twoWeekWorkoutPlan?.[activeWeek]?.[activeDay] || DEFAULT_WEEKLY_WORKOUTS[activeDay];
   const totalExercises = currentWorkoutPlan?.exercises?.length || 0;
   const completedCount = currentWorkoutPlan?.exercises
-    ? currentWorkoutPlan.exercises.filter((ex) =>
+    ? currentWorkoutPlan.exercises.filter((ex: any) =>
         (completedExercises[`${activeWeek}_${activeDay}`] || []).includes(ex.name)
       ).length
     : 0;
@@ -798,56 +798,6 @@ export default function HomeScreen() {
               </View>
             )}
 
-            {/* การ์ดบันทึกสถิติมวลร่างกายล่าสุด */}
-            {!showCalculatorForm && (
-              <View style={styles.card}>
-                <Text style={styles.columnTitle}>📊 บันทึกมวลร่างกายล่าสุด</Text>
-                
-                <View style={styles.compactStatsInputRow}>
-                  <View style={styles.compactInputCol}>
-                    <Text style={styles.compactInputLabel}>น้ำหนัก (kg)</Text>
-                    <TextInput
-                      style={styles.compactTextInput}
-                      value={userWeight}
-                      onChangeText={setUserWeight}
-                      keyboardType="numeric"
-                      placeholder="เช่น 70"
-                      placeholderTextColor="#94A3B8"
-                    />
-                  </View>
-                  <View style={styles.compactInputCol}>
-                    <Text style={styles.compactInputLabel}>ไขมัน (%)</Text>
-                    <TextInput
-                      style={styles.compactTextInput}
-                      value={userBodyFat}
-                      onChangeText={setUserBodyFat}
-                      keyboardType="numeric"
-                      placeholder="เช่น 20"
-                      placeholderTextColor="#94A3B8"
-                    />
-                  </View>
-                  <View style={styles.compactInputCol}>
-                    <Text style={styles.compactInputLabel}>กล้ามเนื้อ (kg)</Text>
-                    <TextInput
-                      style={styles.compactTextInput}
-                      value={userMuscle}
-                      onChangeText={setUserMuscle}
-                      keyboardType="numeric"
-                      placeholder="เช่น 30"
-                      placeholderTextColor="#94A3B8"
-                    />
-                  </View>
-                </View>
-                
-                <Pressable
-                  style={styles.compactSaveBtn}
-                  onPress={handleSaveStatsFromDashboard}
-                >
-                  <Text style={styles.compactSaveBtnText}>💾 อัปเดตและคำนวณจัดอันดับ</Text>
-                </Pressable>
-              </View>
-            )}
-
             {/* การ์ดเช็คลิสต์ภารกิจรายวัน */}
             <ChecklistCard
               dailyChecklist={dailyChecklist[activeDay] || {}}
@@ -875,8 +825,17 @@ export default function HomeScreen() {
 
           {/* คอลัมน์ที่ 3: กราฟแท่งแนวโน้มน้ำหนักตัว & ตารางการออกกำลังกาย */}
           <View style={styles.gridColumn}>
-            {/* กราฟน้ำหนักตัว */}
-            <WeightChart weightHistory={weightHistory} onAddWeight={handleAddWeight} />
+            {/* กราฟน้ำหนักตัวและบันทึกมวลร่างกาย */}
+            <WeightChart
+              weightHistory={weightHistory}
+              weight={userWeight}
+              bodyFat={userBodyFat}
+              muscle={userMuscle}
+              onChangeWeight={setUserWeight}
+              onChangeBodyFat={setUserBodyFat}
+              onChangeMuscle={setUserMuscle}
+              onUpdateStats={handleSaveStatsFromDashboard}
+            />
 
             {/* ส่วนควบคุมตารางออกกำลังกาย 2 สัปดาห์ */}
             <View style={styles.workoutPlanHeaderCard}>
@@ -1257,7 +1216,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#1E293B',
     outlineStyle: 'none',
-  },
+  } as any,
   compactSaveBtn: {
     backgroundColor: '#2563EB',
     borderRadius: 8,

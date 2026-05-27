@@ -1231,7 +1231,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#1E293B',
     outlineStyle: 'none',
-  },
+  } as any,
   infoBanner: {
     backgroundColor: '#EFF6FF',
     borderWidth: 1,
