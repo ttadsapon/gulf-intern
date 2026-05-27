@@ -6,6 +6,7 @@ export interface Meal {
   carbs: number;   // in grams
   fat: number;     // in grams
   category: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+  price?: number;
 }
 
 export interface Exercise {
@@ -29,27 +30,27 @@ export const DAYS_OF_WEEK = ['จันทร์', 'อังคาร', 'พุ
 
 export const MOCK_MEALS: Meal[] = [
   // Breakfast
-  { id: 'b1', name: 'อกไก่ย่างกับข้าวกล้อง', calories: 350, protein: 30, carbs: 45, fat: 5, category: 'breakfast' },
-  { id: 'b2', name: 'ไข่ต้ม 2 ฟอง + ขนมปังโฮลวีต 2 แผ่น', calories: 280, protein: 18, carbs: 30, fat: 10, category: 'breakfast' },
-  { id: 'b3', name: 'โอ๊ตมีลผลไม้รวมและกล้วยหอม', calories: 310, protein: 10, carbs: 55, fat: 6, category: 'breakfast' },
-  { id: 'b4', name: 'กรีกโยเกิร์ตใส่น้ำผึ้งและกราโนล่า', calories: 250, protein: 15, carbs: 32, fat: 7, category: 'breakfast' },
+  { id: 'b1', name: 'อกไก่ย่างกับข้าวกล้อง', calories: 350, protein: 30, carbs: 45, fat: 5, category: 'breakfast', price: 45 },
+  { id: 'b2', name: 'ไข่ต้ม 2 ฟอง + ขนมปังโฮลวีต 2 แผ่น', calories: 280, protein: 18, carbs: 30, fat: 10, category: 'breakfast', price: 40 },
+  { id: 'b3', name: 'โอ๊ตมีลผลไม้รวมและกล้วยหอม', calories: 310, protein: 10, carbs: 55, fat: 6, category: 'breakfast', price: 60 },
+  { id: 'b4', name: 'กรีกโยเกิร์ตใส่น้ำผึ้งและกราโนล่า', calories: 250, protein: 15, carbs: 32, fat: 7, category: 'breakfast', price: 50 },
   
   // Lunch
-  { id: 'l1', name: 'ข้าวผัดอกไก่ใส่ผักรวม', calories: 420, protein: 32, carbs: 50, fat: 9, category: 'lunch' },
-  { id: 'l2', name: 'สลัดทูน่าในน้ำแร่ไข่ต้ม', calories: 290, protein: 26, carbs: 12, fat: 15, category: 'lunch' },
-  { id: 'l3', name: 'กะเพราอกไก่ราดข้าวกล้อง + ไข่ดาวน้ำ', calories: 450, protein: 35, carbs: 55, fat: 10, category: 'lunch' },
-  { id: 'l4', name: 'แกงส้มกุ้งผักรวม + ข้าวสวย', calories: 310, protein: 20, carbs: 46, fat: 4, category: 'lunch' },
+  { id: 'l1', name: 'ข้าวผัดอกไก่ใส่ผักรวม', calories: 420, protein: 32, carbs: 50, fat: 9, category: 'lunch', price: 55 },
+  { id: 'l2', name: 'สลัดทูน่าในน้ำแร่ไข่ต้ม', calories: 290, protein: 26, carbs: 12, fat: 15, category: 'lunch', price: 50 },
+  { id: 'l3', name: 'กะเพราอกไก่ราดข้าวกล้อง + ไข่ดาวน้ำ', calories: 450, protein: 35, carbs: 55, fat: 10, category: 'lunch', price: 65 },
+  { id: 'l4', name: 'แกงส้มกุ้งผักรวม + ข้าวสวย', calories: 310, protein: 20, carbs: 46, fat: 4, category: 'lunch', price: 80 },
   
   // Dinner
-  { id: 'd1', name: 'ปลาย่างเกลือกับบล็อคโคลี่ต้ม', calories: 280, protein: 28, carbs: 10, fat: 12, category: 'dinner' },
-  { id: 'd2', name: 'สเต็กอกไก่พริกไทยดำ + ผักย่าง', calories: 360, protein: 35, carbs: 15, fat: 16, category: 'dinner' },
-  { id: 'd3', name: 'แกงจืดเต้าหู้หมูสับใส่วุ้นเส้น', calories: 220, protein: 15, carbs: 18, fat: 9, category: 'dinner' },
-  { id: 'd4', name: 'แซลมอนย่างซีอิ๊วญี่ปุ่น + ผักลวก', calories: 410, protein: 24, carbs: 18, fat: 26, category: 'dinner' },
+  { id: 'd1', name: 'ปลาย่างเกลือกับบล็อคโคลี่ต้ม', calories: 280, protein: 28, carbs: 10, fat: 12, category: 'dinner', price: 85 },
+  { id: 'd2', name: 'สเต็กอกไก่พริกไทยดำ + ผักย่าง', calories: 360, protein: 35, carbs: 15, fat: 16, category: 'dinner', price: 79 },
+  { id: 'd3', name: 'แกงจืดเต้าหู้หมูสับใส่วุ้นเส้น', calories: 220, protein: 15, carbs: 18, fat: 9, category: 'dinner', price: 50 },
+  { id: 'd4', name: 'แซลมอนย่างซีอิ๊วญี่ปุ่น + ผักลวก', calories: 410, protein: 24, carbs: 18, fat: 26, category: 'dinner', price: 150 },
   
   // Snacks
-  { id: 's1', name: 'ถั่วอัลมอนด์อบ (1 กำมือ)', calories: 170, protein: 6, carbs: 6, fat: 15, category: 'snack' },
-  { id: 's2', name: 'เวย์โปรตีน 1 สกู๊ป', calories: 120, protein: 24, carbs: 3, fat: 1, category: 'snack' },
-  { id: 's3', name: 'แอปเปิ้ลเขียว 1 ลูก', calories: 80, protein: 0, carbs: 20, fat: 0, category: 'snack' }
+  { id: 's1', name: 'ถั่วอัลมอนด์อบ (1 กำมือ)', calories: 170, protein: 6, carbs: 6, fat: 15, category: 'snack', price: 30 },
+  { id: 's2', name: 'เวย์โปรตีน 1 สกู๊ป', calories: 120, protein: 24, carbs: 3, fat: 1, category: 'snack', price: 45 },
+  { id: 's3', name: 'แอปเปิ้ลเขียว 1 ลูก', calories: 80, protein: 0, carbs: 20, fat: 0, category: 'snack', price: 15 }
 ];
 
 export const DEFAULT_WEEKLY_MEALS: Record<string, Meal[]> = {

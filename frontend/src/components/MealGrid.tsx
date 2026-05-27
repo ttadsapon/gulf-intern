@@ -47,8 +47,38 @@ export default function MealGrid({ currentMeals, onUpdateMeal }: MealGridProps) 
           const meal = currentMeals[cat.index];
           return (
             <View key={cat.id} style={styles.mealCard}>
-              <View style={styles.mealHeader}>
-                <Text style={styles.categoryLabel}>{cat.label}</Text>
+              <View style={styles.mealMainContent}>
+                <View style={styles.mealMetaRow}>
+                  <Text style={styles.categoryLabel}>{cat.label}</Text>
+                  {meal && meal.price !== undefined && (
+                    <Text style={styles.priceBadge}>฿{meal.price}</Text>
+                  )}
+                </View>
+
+                {meal ? (
+                  <View style={styles.mealInfoSection}>
+                    <Text style={styles.mealName} numberOfLines={2}>{meal.name}</Text>
+                    <View style={styles.macroPills}>
+                      <View style={[styles.pill, styles.pillCarb]}><Text style={styles.pillText}>C: {meal.carbs}g</Text></View>
+                      <View style={[styles.pill, styles.pillProtein]}><Text style={styles.pillText}>P: {meal.protein}g</Text></View>
+                      <View style={[styles.pill, styles.pillFat]}><Text style={styles.pillText}>F: {meal.fat}g</Text></View>
+                    </View>
+                  </View>
+                ) : (
+                  <View style={styles.emptyStateInline}>
+                    <Text style={styles.emptyText}>ยังไม่ได้เลือกเมนูอาหาร</Text>
+                  </View>
+                )}
+              </View>
+
+              <View style={styles.mealRightSection}>
+                {meal ? (
+                  <View style={styles.calBadge}>
+                    <Text style={styles.calValue}>{meal.calories}</Text>
+                    <Text style={styles.calUnit}>kcal</Text>
+                  </View>
+                ) : null}
+
                 <Pressable
                   style={styles.actionBtn}
                   onPress={() => openMealSelector(cat.id as any, cat.index)}
@@ -56,27 +86,6 @@ export default function MealGrid({ currentMeals, onUpdateMeal }: MealGridProps) 
                   <Text style={styles.actionBtnText}>{meal ? 'เปลี่ยน' : '+ เลือก'}</Text>
                 </Pressable>
               </View>
-
-              {meal ? (
-                <View style={styles.mealContent}>
-                  <Text style={styles.mealName} numberOfLines={2}>{meal.name}</Text>
-                  
-                  <View style={styles.macroPills}>
-                    <View style={[styles.pill, styles.pillCarb]}><Text style={styles.pillText}>C: {meal.carbs}g</Text></View>
-                    <View style={[styles.pill, styles.pillProtein]}><Text style={styles.pillText}>P: {meal.protein}g</Text></View>
-                    <View style={[styles.pill, styles.pillFat]}><Text style={styles.pillText}>F: {meal.fat}g</Text></View>
-                  </View>
-
-                  <View style={styles.calBadge}>
-                    <Text style={styles.calValue}>{meal.calories}</Text>
-                    <Text style={styles.calUnit}>kcal</Text>
-                  </View>
-                </View>
-              ) : (
-                <View style={styles.emptyState}>
-                  <Text style={styles.emptyText}>ยังไม่ได้เลือกเมนูอาหาร</Text>
-                </View>
-              )}
             </View>
           );
         })}
@@ -110,7 +119,7 @@ export default function MealGrid({ currentMeals, onUpdateMeal }: MealGridProps) 
                   <View style={styles.modalItemInfo}>
                     <Text style={styles.modalItemName}>{item.name}</Text>
                     <Text style={styles.modalItemMacros}>
-                      คาร์บ: {item.carbs}g | โปรตีน: {item.protein}g | ไขมัน: {item.fat}g
+                      คาร์บ: {item.carbs}g | โปรตีน: {item.protein}g | ไขมัน: {item.fat}g {item.price !== undefined && `| ฿${item.price}`}
                     </Text>
                   </View>
                   <View style={styles.modalItemCal}>
@@ -149,9 +158,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: 18,
-    flex: 1,
-    minWidth: Platform.OS === 'web' ? 240 : '100%',
-    maxWidth: Platform.OS === 'web' ? '48%' : '100%',
+    width: '100%',
     borderWidth: 1,
     borderColor: '#E2E8F0',
     shadowColor: '#1E40AF',
@@ -159,16 +166,33 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.02,
     shadowRadius: 10,
     elevation: 2,
-    justifyContent: 'space-between',
-  },
-  mealHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
-    paddingBottom: 10,
-    marginBottom: 12,
+    gap: 16,
+  },
+  mealMainContent: {
+    flex: 1,
+    gap: 6,
+  },
+  mealMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  priceBadge: {
+    backgroundColor: '#ECFDF5',
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+    borderRadius: 8,
+    paddingVertical: 2,
+    paddingHorizontal: 8,
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#047857',
+  },
+  mealInfoSection: {
+    gap: 4,
   },
   categoryLabel: {
     fontSize: 14,
@@ -188,22 +212,17 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#2563EB',
   },
-  mealContent: {
-    flex: 1,
-    justifyContent: 'space-between',
-  },
   mealName: {
     fontSize: 14,
     fontWeight: '700',
     color: '#334155',
     lineHeight: 20,
-    marginBottom: 10,
   },
   macroPills: {
     flexDirection: 'row',
     gap: 4,
     flexWrap: 'wrap',
-    marginBottom: 14,
+    marginTop: 4,
   },
   pill: {
     paddingVertical: 2,
@@ -228,6 +247,12 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#475569',
   },
+  mealRightSection: {
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+    gap: 10,
+    minWidth: 80,
+  },
   calBadge: {
     backgroundColor: '#F8FAFC',
     borderWidth: 1,
@@ -235,7 +260,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: 6,
     paddingHorizontal: 12,
-    alignSelf: 'flex-start',
     flexDirection: 'row',
     alignItems: 'baseline',
     gap: 2,
@@ -249,6 +273,9 @@ const styles = StyleSheet.create({
     fontSize: 9,
     color: '#64748B',
     fontWeight: '500',
+  },
+  emptyStateInline: {
+    paddingVertical: 4,
   },
   emptyState: {
     paddingVertical: 24,
