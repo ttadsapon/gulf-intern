@@ -28,6 +28,7 @@ import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface ProfileData {
+  name?: string;
   gender: 'male' | 'female';
   weight: number;
   height: number;
@@ -207,6 +208,11 @@ export default function HomeScreen() {
           };
 
           const pRes = await fetch('http://localhost:3000/api/user/profile', { headers });
+          if (pRes.status === 401) {
+            // โทเค็นหมดอายุหรือเป็นโทเค็นจำลองแบบเก่า -> ให้เคลียร์และล็อกเอาท์ออกทันที
+            await handleLogout();
+            return;
+          }
           if (pRes.ok) backendProfile = await pRes.json();
 
           const mRes = await fetch('http://localhost:3000/api/user/meals', { headers });
@@ -903,7 +909,7 @@ export default function HomeScreen() {
             ) : (
               <View style={styles.card}>
                 <View style={styles.profileSummaryHeader}>
-                  <Text style={styles.columnTitle}>👤 ข้อมูลร่างกายของคุณ</Text>
+                  <Text style={styles.columnTitle}>👤 {userProfile?.name ? `คุณ ${userProfile.name}` : 'ข้อมูลร่างกายของคุณ'}</Text>
                   <View style={{ flexDirection: 'row', gap: 8 }}>
                     <Pressable style={styles.editBtn} onPress={() => setShowCalculatorForm(true)}>
                       <Text style={styles.editBtnText}>แก้ไขข้อมูล</Text>

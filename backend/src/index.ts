@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
+import nodemailer from 'nodemailer';
 
 dotenv.config();
 
@@ -38,6 +39,46 @@ const mockWeightLogs: Record<string, any[]> = {};
 const mockMealPlans: Record<string, any> = {};
 const mockWorkoutPlans: Record<string, any> = {};
 
+const mapProfileToDb = (profile: any) => {
+  if (!profile) return {};
+  return {
+    gender: profile.gender,
+    weight: profile.weight,
+    height: profile.height,
+    age: profile.age,
+    activity: profile.activity,
+    goal: profile.goal,
+    target_calories: profile.targetCalories !== undefined ? profile.targetCalories : profile.target_calories,
+    bmi: profile.bmi,
+    bmr: profile.bmr,
+    tdee: profile.tdee,
+    protein: profile.protein,
+    carbs: profile.carbs,
+    fat: profile.fat,
+    name: profile.name
+  };
+};
+
+const mapDbToProfile = (dbProfile: any) => {
+  if (!dbProfile) return null;
+  return {
+    name: dbProfile.name,
+    gender: dbProfile.gender,
+    weight: dbProfile.weight,
+    height: dbProfile.height,
+    age: dbProfile.age,
+    activity: dbProfile.activity,
+    goal: dbProfile.goal,
+    targetCalories: dbProfile.target_calories !== undefined ? dbProfile.target_calories : dbProfile.targetCalories,
+    bmi: dbProfile.bmi,
+    bmr: dbProfile.bmr,
+    tdee: dbProfile.tdee,
+    protein: dbProfile.protein,
+    carbs: dbProfile.carbs,
+    fat: dbProfile.fat
+  };
+};
+
 // Helper: ดึง User ID จาก Token (ในระบบจริงจะใช้ jwt verification)
 const getUserIdFromToken = (req: express.Request): string | null => {
   const authHeader = req.headers.authorization;
@@ -47,8 +88,11 @@ const getUserIdFromToken = (req: express.Request): string | null => {
   const token = authHeader.split(' ')[1];
   
   if (isSupabaseConfigured) {
-    // ในระบบจริง จะใช้วิธีส่ง token ไปตรวจกับ supabase auth
-    // สำหรับเดโมนี้หรือการทดสอบ เราจะดึงข้อมูล user ที่ล็อกอินอยู่ หรือคืนค่า token เป็น userId โดยตรง
+    // ตรวจสอบว่าเป็น UUID รูปแบบที่ถูกต้องหรือไม่ เพื่อป้องกันข้อผิดพลาดจาก mock tokens ที่ค้างอยู่
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(token)) {
+      return null;
+    }
     return token;
   } else {
     // ระบบจำลอง: โทเค็นก็คือ userId ที่เราส่งกลับตอนล็อกอิน
@@ -82,12 +126,31 @@ app.post('/api/auth/register', async (req, res) => {
       const userId = data.user.id;
 
       // บันทึกโปรไฟล์ลงในตาราง profiles
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .upsert({
-          id: userId,
-          ...profile,
-        });
+      let profileError = null;
+      try {
+        const { error } = await supabase
+          .from('profiles')
+          .upsert({
+            id: userId,
+            ...mapProfileToDb(profile),
+          });
+        profileError = error;
+      } catch (upsertErr: any) {
+        profileError = upsertErr;
+      }
+
+      // หากตาราง profiles ยังไม่มีคอลัมน์ name หรือ bmi (เช่น ติดคัดกรอง หรือยังไม่ได้ Run SQL) ให้กรองฟิลด์เจ้าปัญหาก่อนอัปเดตใหม่
+      if (profileError && (profileError.code === '42703' || String(profileError.message || '').includes('name') || String(profileError.message || '').includes('bmi'))) {
+        console.warn('⚠️ profiles table does not match schema exactly. Retrying profile upsert without columns name/bmi...');
+        const { name: _, bmi: __, ...restProfile } = profile;
+        const { error: retryError } = await supabase
+          .from('profiles')
+          .upsert({
+            id: userId,
+            ...mapProfileToDb(restProfile),
+          });
+        profileError = retryError;
+      }
 
       if (profileError) throw profileError;
 
@@ -107,6 +170,7 @@ app.post('/api/auth/register', async (req, res) => {
       const userId = 'mock_user_' + Math.random().toString(36).substr(2, 9);
       mockUsers.push({ id: userId, email, password });
       mockProfiles[userId] = profile || {
+        name: 'ตัวคุณเอง',
         gender: 'male',
         weight: 70,
         height: 170,
@@ -208,7 +272,7 @@ app.get('/api/user/profile', async (req, res) => {
         .single();
 
       if (error) throw error;
-      return res.status(200).json(data);
+      return res.status(200).json(mapDbToProfile(data));
     } else {
       const profile = mockProfiles[userId];
       if (!profile) {
@@ -233,18 +297,43 @@ app.post('/api/user/profile', async (req, res) => {
 
   try {
     if (isSupabaseConfigured) {
-      const { data, error } = await supabase
-        .from('profiles')
-        .upsert({
-          id: userId,
-          ...profileData,
-          updated_at: new Date()
-        })
-        .select()
-        .single();
+      let data = null;
+      let profileError = null;
+      try {
+        const { data: upsertData, error } = await supabase
+          .from('profiles')
+          .upsert({
+            id: userId,
+            ...mapProfileToDb(profileData),
+            updated_at: new Date()
+          })
+          .select()
+          .single();
+        data = upsertData;
+        profileError = error;
+      } catch (upsertErr: any) {
+        profileError = upsertErr;
+      }
 
-      if (error) throw error;
-      return res.status(200).json(data);
+      // หากตาราง profiles ยังไม่มีคอลัมน์ name หรือ bmi (เช่น ติดคัดกรอง หรือยังไม่ได้ Run SQL) ให้กรองฟิลด์เจ้าปัญหาก่อนอัปเดตใหม่
+      if (profileError && (profileError.code === '42703' || String(profileError.message || '').includes('name') || String(profileError.message || '').includes('bmi'))) {
+        console.warn('⚠️ profiles table does not match schema exactly. Retrying profile update upsert without columns name/bmi...');
+        const { name: _, bmi: __, ...restProfile } = profileData;
+        const { data: retryData, error: retryError } = await supabase
+          .from('profiles')
+          .upsert({
+            id: userId,
+            ...mapProfileToDb(restProfile),
+            updated_at: new Date()
+          })
+          .select()
+          .single();
+        data = retryData;
+        profileError = retryError;
+      }
+
+      if (profileError) throw profileError;
+      return res.status(200).json(mapDbToProfile(data));
     } else {
       mockProfiles[userId] = {
         ...mockProfiles[userId],
@@ -450,6 +539,249 @@ app.post('/api/user/weight', async (req, res) => {
     }
   } catch (err: any) {
     return res.status(500).json({ error: err.message || 'เกิดข้อผิดพลาดในการบันทึกน้ำหนัก' });
+  }
+});
+
+// ----------------------------------------------------
+// 📧 ระบบแชร์ตารางผ่านอีเมล (Email Sharing Service)
+// ----------------------------------------------------
+
+// SMTP Configuration
+const smtpHost = process.env.SMTP_HOST || '';
+const smtpPort = parseInt(process.env.SMTP_PORT || '587');
+const smtpUser = process.env.SMTP_USER || '';
+const smtpPass = process.env.SMTP_PASS || '';
+
+// ดึงตัวจัดการการส่งเมล (หากไม่มี SMTP จริงจะสร้าง Ethereal account อัตโนมัติสำหรับ sandbox)
+const getMailTransporter = async () => {
+  if (smtpHost && smtpUser && smtpPass) {
+    return nodemailer.createTransport({
+      host: smtpHost,
+      port: smtpPort,
+      secure: smtpPort === 465,
+      auth: {
+        user: smtpUser,
+        pass: smtpPass,
+      },
+    });
+  } else {
+    console.log('📬 SMTP credentials not configured. Creating Ethereal Test Mailer account...');
+    const testAccount = await nodemailer.createTestAccount();
+    return nodemailer.createTransport({
+      host: testAccount.smtp.host,
+      port: testAccount.smtp.port,
+      secure: testAccount.smtp.secure,
+      auth: {
+        user: testAccount.user,
+        pass: testAccount.pass,
+      },
+    });
+  }
+};
+
+// ฟังก์ชันสร้างหน้าเนื้อหาอีเมล HTML ของแผน 14 วัน
+const generatePlanHtml = (planType: 'meal' | 'workout', planData: any, userName: string): string => {
+  const isMeal = planType === 'meal';
+  const title = isMeal ? 'ตารางโภชนาการอาหารอัจฉริยะ (14 วัน)' : 'ตารางฝึกซ้อมออกกำลังกายอัจฉริยะ (14 วัน)';
+  const themeColor = isMeal ? '#10B981' : '#2563EB';
+  const themeGradient = isMeal 
+    ? 'linear-gradient(135deg, #10B981 0%, #059669 100%)' 
+    : 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)';
+
+  let contentHtml = '';
+
+  const renderDays = (weekData: any, weekTitle: string) => {
+    if (!weekData) return '';
+    let weekHtml = `<h2 style="color: ${themeColor}; border-bottom: 2px solid ${themeColor}; padding-bottom: 8px; margin-top: 30px;">${weekTitle}</h2>`;
+    
+    for (const day of ['จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์', 'อาทิตย์']) {
+      const dayPlan = weekData[day];
+      if (!dayPlan) continue;
+
+      weekHtml += `
+        <div style="background-color: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 16px; margin-bottom: 16px; font-family: sans-serif;">
+          <h3 style="margin-top: 0; color: #1E293B; font-size: 16px; font-weight: bold; border-left: 4px solid ${themeColor}; padding-left: 8px;">
+            วัน${day}
+          </h3>
+      `;
+
+      if (isMeal) {
+        weekHtml += `
+          <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+            <thead>
+              <tr style="background-color: #EDF2F7; text-align: left;">
+                <th style="padding: 8px; font-size: 12px; color: #4A5568;">มื้ออาหาร</th>
+                <th style="padding: 8px; font-size: 12px; color: #4A5568;">รายการอาหาร</th>
+                <th style="padding: 8px; font-size: 12px; color: #4A5568; text-align: right;">พลังงาน</th>
+                <th style="padding: 8px; font-size: 12px; color: #4A5568; text-align: right;">โปรตีน/คาร์บ/ไขมัน</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+
+        const categoriesMap: Record<string, string> = {
+          breakfast: '🌅 เช้า',
+          lunch: '☀️ กลางวัน',
+          dinner: '🌆 เย็น',
+          snack: '🍎 ว่าง'
+        };
+
+        dayPlan.forEach((meal: any) => {
+          if (!meal) return;
+          const categoryName = categoriesMap[meal.category] || meal.category;
+          weekHtml += `
+            <tr style="border-bottom: 1px solid #E2E8F0;">
+              <td style="padding: 10px 8px; font-size: 13px; font-weight: bold; color: #4A5568; width: 20%;">${categoryName}</td>
+              <td style="padding: 10px 8px; font-size: 13px; color: #2D3748;">${meal.name}</td>
+              <td style="padding: 10px 8px; font-size: 13px; color: #2D3748; text-align: right; font-weight: bold;">${meal.calories} kcal</td>
+              <td style="padding: 10px 8px; font-size: 12px; color: #718096; text-align: right;">
+                P: ${meal.protein}g | C: ${meal.carbs}g | F: ${meal.fat}g
+              </td>
+            </tr>
+          `;
+        });
+
+        weekHtml += `
+            </tbody>
+          </table>
+        `;
+      } else {
+        const titleText = dayPlan.workoutTitle || 'พักผ่อน (Rest Day)';
+        const focusText = dayPlan.workoutFocus ? `(โฟกัส: ${dayPlan.workoutFocus})` : '';
+        const exercises = dayPlan.exercises || [];
+
+        weekHtml += `
+          <div style="margin-bottom: 10px;">
+            <strong style="color: #2D3748; font-size: 14px;">🏃‍♂️ โปรแกรม: ${titleText}</strong> 
+            <span style="color: #718096; font-size: 13px; margin-left: 5px;">${focusText}</span>
+          </div>
+        `;
+
+        if (exercises.length > 0) {
+          weekHtml += `
+            <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+              <thead>
+                <tr style="background-color: #EDF2F7; text-align: left;">
+                  <th style="padding: 8px; font-size: 12px; color: #4A5568;">ท่าออกกำลังกาย</th>
+                  <th style="padding: 8px; font-size: 12px; color: #4A5568; text-align: center;">จำนวนเซต / ครั้ง</th>
+                  <th style="padding: 8px; font-size: 12px; color: #4A5568;">คำอธิบาย</th>
+                </tr>
+              </thead>
+              <tbody>
+          `;
+
+          exercises.forEach((ex: any) => {
+            weekHtml += `
+              <tr style="border-bottom: 1px solid #E2E8F0;">
+                <td style="padding: 10px 8px; font-size: 13px; font-weight: bold; color: #2D3748; width: 30%;">${ex.name}</td>
+                <td style="padding: 10px 8px; font-size: 13px; color: #2563EB; text-align: center; font-weight: bold; width: 25%;">${ex.sets} เซต x ${ex.reps}</td>
+                <td style="padding: 10px 8px; font-size: 12px; color: #4A5568;">${ex.description}</td>
+              </tr>
+            `;
+          });
+
+          weekHtml += `
+              </tbody>
+            </table>
+          `;
+        } else {
+          weekHtml += `
+            <div style="padding: 12px; font-size: 13px; color: #718096; background-color: #EDF2F7; border-radius: 6px; text-align: center; margin-top: 8px;">
+              😴 วันพักผ่อนเพื่อฟื้นฟูร่างกายและกล้ามเนื้อเต็มประสิทธิภาพ
+            </div>
+          `;
+        }
+      }
+
+      weekHtml += `</div>`;
+    }
+
+    return weekHtml;
+  };
+
+  contentHtml += renderDays(planData.week1, '📅 สัปดาห์ที่ 1');
+  contentHtml += renderDays(planData.week2, '📅 สัปดาห์ที่ 2 (เพิ่มความท้าทาย)');
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>${title}</title>
+    </head>
+    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #F1F5F9; margin: 0; padding: 20px; color: #334155;">
+      <div style="max-width: 650px; margin: 0 auto; background-color: #FFFFFF; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06); border: 1px solid #E2E8F0;">
+        <!-- Header Banner -->
+        <div style="background: ${themeGradient}; padding: 30px 24px; text-align: center; color: #FFFFFF;">
+          <h1 style="margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.5px;">🌱 AuraHealth</h1>
+          <p style="margin: 5px 0 0 0; font-size: 14px; opacity: 0.9; text-transform: uppercase; letter-spacing: 1.5px;">${title}</p>
+        </div>
+        
+        <!-- Welcome Section -->
+        <div style="padding: 24px 24px 0 24px;">
+          <p style="margin: 0; font-size: 15px; line-height: 24px; color: #334155;">
+            สวัสดีครับ สมาชิกทีม <strong>AuraHealth</strong>, คุณ <strong>${userName}</strong> ได้ทำการเจเนอเรตแผนงานสุขภาพ 14 วัน และส่งตารางด้านล่างนี้มาให้คุณเพื่อนำไปปฏิบัติตามแผนเพื่อหุ่นและสุขภาพที่ดีขึ้นครับ!
+          </p>
+        </div>
+
+        <!-- Plan Contents -->
+        <div style="padding: 0 24px 24px 24px;">
+          ${contentHtml}
+        </div>
+
+        <!-- Footer -->
+        <div style="background-color: #F8FAFC; border-top: 1px solid #E2E8F0; padding: 20px; text-align: center; font-size: 11px; color: #64748B;">
+          <p style="margin: 0 0 5px 0;">อีเมลนี้จัดทำขึ้นโดยแอปพลิเคชัน AuraHealth ระบบโภชนาการและออกกำลังกายอัจฉริยะ</p>
+          <p style="margin: 0;">&copy; 2026 AuraHealth Team. All rights reserved.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+};
+
+// Route: ส่งอีเมลตารางงาน
+app.post('/api/user/share-plan', async (req, res) => {
+  const { email, planType, planData, userName } = req.body;
+
+  if (!email || !planType || !planData) {
+    return res.status(400).json({ error: 'ข้อมูลสำหรับแชร์ตารางไม่ครบถ้วน' });
+  }
+
+  try {
+    const transporter = await getMailTransporter();
+    
+    // สร้างเนื้อหาจดหมาย HTML
+    const htmlContent = generatePlanHtml(planType, planData, userName || 'สมาชิก AuraHealth');
+    
+    const subject = planType === 'meal' 
+      ? `🥗 ตารางอาหารเพื่อสุขภาพ 14 วันของคุณ (จาก: ${userName || 'เพื่อนร่วมงาน'})`
+      : `🏋️ ตารางฝึกออกกำลังกาย 14 วันของคุณ (จาก: ${userName || 'เพื่อนร่วมงาน'})`;
+
+    const mailOptions = {
+      from: smtpUser ? `"AuraHealth App" <${smtpUser}>` : '"AuraHealth Sandbox" <no-reply@ethereal.email>',
+      to: email,
+      subject: subject,
+      html: htmlContent,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    const previewUrl = nodemailer.getTestMessageUrl(info);
+
+    console.log('✉️ Email sent successfully:', info.messageId);
+    if (previewUrl) {
+      console.log('📬 Ethereal Mail Preview URL:', previewUrl);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'ส่งข้อมูลตารางเข้าอีเมลเรียบร้อยแล้ว',
+      messageId: info.messageId,
+      previewUrl: previewUrl || null
+    });
+  } catch (err: any) {
+    console.error('Email send error:', err);
+    return res.status(500).json({ error: err.message || 'ไม่สามารถส่งอีเมลได้ในขณะนี้' });
   }
 });
 

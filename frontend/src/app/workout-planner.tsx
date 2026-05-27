@@ -11,6 +11,7 @@ import {
   Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // ข้อมูลสำหรับใช้งานคัดกรองการออกกำลังกาย
 const UPPER_BODY_POOL = [
@@ -71,6 +72,33 @@ export default function WorkoutPlannerScreen() {
   const [loadingStep, setLoadingStep] = useState<number>(0);
   const [generatedPlan, setGeneratedPlan] = useState<any | null>(null);
   const [previewWeek, setPreviewWeek] = useState<'week1' | 'week2'>('week1');
+
+  // สำหรับฟังก์ชันส่งตารางเข้าเมล
+  const [userName, setUserName] = useState('สมาชิก');
+  const [shareEmail, setShareEmail] = useState('');
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
+
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      try {
+        const savedProfile = await AsyncStorage.getItem('aura_user_profile');
+        if (savedProfile) {
+          const profile = JSON.parse(savedProfile);
+          if (profile.name) {
+            setUserName(profile.name);
+          }
+        }
+        // ดึงอีเมลผู้ใช้ที่ล็อกอินอยู่มาเป็นค่าเริ่มต้นสำหรับช่องกรอกอีเมลส่งแชร์
+        const savedEmail = await AsyncStorage.getItem('@aura_user_email');
+        if (savedEmail) {
+          setShareEmail(savedEmail);
+        }
+      } catch (e) {
+        console.warn(e);
+      }
+    };
+    loadUserProfile();
+  }, []);
 
   // ข้อความแสดงสถานะโหลดบิลด์
   const loadingMessages = [
@@ -278,18 +306,66 @@ export default function WorkoutPlannerScreen() {
   };
 
   // บันทึกตารางฝึก 2 สัปดาห์ลงในเครื่อง
-  const handleSavePlan = () => {
+  const handleSavePlan = async () => {
     if (!generatedPlan) return;
     try {
-      localStorage.setItem('aura_two_week_workout_plan', JSON.stringify(generatedPlan));
+      await AsyncStorage.setItem('aura_two_week_workout_plan', JSON.stringify(generatedPlan));
       
       // ล้างข้อมูลเช็คลิสต์การออกกำลังกายที่เคยติ๊กไว้ เพื่อเริ่มตารางใหม่
-      localStorage.removeItem('aura_completed_exercises_v2');
+      await AsyncStorage.removeItem('aura_completed_exercises_v2');
       
       alert('🎉 บันทึกตารางออกกำลังกาย 2 สัปดาห์ลงในเครื่องเรียบร้อยแล้ว!');
       router.replace('/');
     } catch (e) {
       alert('ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง');
+    }
+  };
+
+  // ส่งตารางออกกำลังกายไปยังอีเมลเพื่อนร่วมงาน/ตนเอง
+  const handleSharePlanViaEmail = async () => {
+    if (!shareEmail.trim()) {
+      alert('กรุณากรอกอีเมลผู้รับ');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(shareEmail.trim())) {
+      alert('กรุณากรอกอีเมลให้ถูกต้องตามรูปแบบ');
+      return;
+    }
+
+    setIsSendingEmail(true);
+
+    try {
+      const response = await fetch('http://localhost:3000/api/user/share-plan', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: shareEmail.trim(),
+          planType: 'workout',
+          planData: generatedPlan,
+          userName: userName
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'เกิดข้อผิดพลาดในการส่งอีเมล');
+      }
+
+      alert('✉️ ส่งตารางฝึกซ้อมออกกำลังกายเข้าอีเมลปลายทางสำเร็จแล้ว!');
+      if (data.previewUrl) {
+        console.log('📬 Ethereal Mail Preview URL:', data.previewUrl);
+        alert(`📬 [ทดสอบ Sandbox] ลิงก์เปิดดูหน้าจดหมายจำลอง:\n${data.previewUrl}`);
+      }
+      setShareEmail('');
+    } catch (err: any) {
+      alert(err.message || 'ไม่สามารถแชร์ตารางผ่านอีเมลได้ในขณะนี้');
+    } finally {
+      setIsSendingEmail(false);
     }
   };
 
@@ -555,6 +631,37 @@ export default function WorkoutPlannerScreen() {
                 </View>
               );
             })}
+          </View>
+
+          {/* ส่วนแชร์ตารางทางอีเมล */}
+          <View style={styles.shareCard}>
+            <Text style={styles.shareCardTitle}>📧 ส่งตารางออกกำลังกาย 2 สัปดาห์นี้เข้าอีเมล</Text>
+            <Text style={styles.shareCardSubtitle}>
+              ระบุอีเมลของพนักงานหรือเพื่อนร่วมงานเพื่อจัดส่งแผนฝึกซ้อมออกกำลังกาย HTML สวยงามคมชัดไปยังปลายทางทันที (ส่งตรงจาก Memory ไม่บันทึกลงฐานข้อมูล)
+            </Text>
+            <View style={styles.shareInputRow}>
+              <TextInput
+                style={styles.shareInput}
+                value={shareEmail}
+                onChangeText={setShareEmail}
+                placeholder="ระบุอีเมล เช่น member@company.com"
+                placeholderTextColor="#94A3B8"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+              <Pressable 
+                style={[styles.shareBtn, isSendingEmail && styles.shareBtnDisabled]} 
+                onPress={handleSharePlanViaEmail}
+                disabled={isSendingEmail}
+              >
+                {isSendingEmail ? (
+                  <ActivityIndicator color="#FFFFFF" size="small" />
+                ) : (
+                  <Text style={styles.shareBtnText}>ส่งเมล</Text>
+                )}
+              </Pressable>
+            </View>
           </View>
 
           {/* ปุ่มบันทึกหรือกลับไปแก้ไข */}
@@ -1132,5 +1239,66 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '800',
     color: '#FFFFFF',
+  },
+  shareCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    marginTop: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.02,
+    shadowRadius: 10,
+    elevation: 1,
+  },
+  shareCardTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#0F172A',
+    marginBottom: 4,
+  },
+  shareCardSubtitle: {
+    fontSize: 11,
+    color: '#64748B',
+    lineHeight: 16,
+    marginBottom: 16,
+  },
+  shareInputRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  shareInput: {
+    flex: 1,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    color: '#1E293B',
+    fontSize: 13,
+    ...Platform.select({
+      web: {
+        outlineStyle: 'none',
+      },
+    }),
+  } as any,
+  shareBtn: {
+    backgroundColor: '#2563EB',
+    borderRadius: 12,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  shareBtnDisabled: {
+    backgroundColor: 'rgba(37, 99, 235, 0.5)',
+  },
+  shareBtnText: {
+    color: '#FFFFFF',
+    fontWeight: '800',
+    fontSize: 13,
   },
 });

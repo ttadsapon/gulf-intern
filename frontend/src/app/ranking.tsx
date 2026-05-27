@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // 1. โครงสร้างข้อมูลสมาชิกจำลองของทีมต่างๆ
 interface MemberStats {
@@ -145,57 +146,63 @@ export default function RankingScreen() {
 
   // โหลดสถิติดั้งเดิมและคำนวณอันดับ
   useEffect(() => {
-    try {
-      // ดึงโปรไฟล์ดั้งเดิมจาก LocalStorage (ถ้ามี)
-      const savedProfile = localStorage.getItem('aura_user_profile');
-      const savedUserStats = localStorage.getItem('aura_user_stats');
-      
-      let baseStats = { ...userStats };
-      
-      if (savedProfile) {
-        const profile = JSON.parse(savedProfile);
-        baseStats.team = (profile.goal === 'fat-loss' ? 'lose' : profile.goal === 'muscle-gain' ? 'gain' : 'maintain') as any;
-        baseStats.initialWeight = profile.weight || 75;
-      }
-      
-      if (savedUserStats) {
-        baseStats = { ...baseStats, ...JSON.parse(savedUserStats) };
-      } else {
-        // อิงค่าน้ำหนักตัวปัจจุบันจากประวัติการลงบันทึกในหน้าหลัก
-        const savedHistory = localStorage.getItem('aura_weight_history');
-        if (savedHistory) {
-          const history = JSON.parse(savedHistory);
-          if (history.length > 0) {
-            baseStats.currentWeight = history[history.length - 1].weight;
+    const loadAllData = async () => {
+      try {
+        // ดึงโปรไฟล์ดั้งเดิมจาก AsyncStorage (ถ้ามี)
+        const savedProfile = await AsyncStorage.getItem('aura_user_profile');
+        const savedUserStats = await AsyncStorage.getItem('aura_user_stats');
+        
+        let baseStats = { ...userStats };
+        
+        if (savedProfile) {
+          const profile = JSON.parse(savedProfile);
+          baseStats.team = (profile.goal === 'fat-loss' ? 'lose' : profile.goal === 'muscle-gain' ? 'gain' : 'maintain') as any;
+          baseStats.initialWeight = profile.weight || 75;
+          if (profile.name) {
+            baseStats.name = profile.name;
           }
         }
-      }
-
-      // คำนวณความคืบหน้าการทำงานจริงของผู้ใช้ (Workout & Meal)
-      const savedExercises = localStorage.getItem('aura_completed_exercises_v2');
-      if (savedExercises) {
-        const completed = JSON.parse(savedExercises);
-        let totalCount = 0;
-        for (const key in completed) {
-          totalCount += completed[key].length;
+        
+        if (savedUserStats) {
+          baseStats = { ...baseStats, ...JSON.parse(savedUserStats) };
+        } else {
+          // อิงค่าน้ำหนักตัวปัจจุบันจากประวัติการลงบันทึกในหน้าหลัก
+          const savedHistory = await AsyncStorage.getItem('aura_weight_history');
+          if (savedHistory) {
+            const history = JSON.parse(savedHistory);
+            if (history.length > 0) {
+              baseStats.currentWeight = history[history.length - 1].weight;
+            }
+          }
         }
-        // สมมติเปอร์เซ็นต์
-        baseStats.workoutCompletion = Math.min(100, Math.max(50, 60 + totalCount * 2));
-      }
-      
-      const savedMeals = localStorage.getItem('aura_two_week_meal_plan');
-      if (savedMeals) {
-        baseStats.mealCompletion = Math.min(100, Math.max(40, 78));
-      }
 
-      setUserStats(baseStats);
-      recalculateLeaderboard(baseStats);
-    } catch (e) {
-      console.warn(e);
-      recalculateLeaderboard(userStats);
-    } finally {
-      setIsLoading(false);
-    }
+        // คำนวณความคืบหน้าการทำงานจริงของผู้ใช้ (Workout & Meal)
+        const savedExercises = (await AsyncStorage.getItem('aura_completed_exercises_v2')) || (await AsyncStorage.getItem('aura_completed_exercises'));
+        if (savedExercises) {
+          const completed = JSON.parse(savedExercises);
+          let totalCount = 0;
+          for (const key in completed) {
+            totalCount += completed[key].length;
+          }
+          // สมมติเปอร์เซ็นต์
+          baseStats.workoutCompletion = Math.min(100, Math.max(50, 60 + totalCount * 2));
+        }
+        
+        const savedMeals = await AsyncStorage.getItem('aura_two_week_meal_plan');
+        if (savedMeals) {
+          baseStats.mealCompletion = Math.min(100, Math.max(40, 78));
+        }
+
+        setUserStats(baseStats);
+        recalculateLeaderboard(baseStats);
+      } catch (e) {
+        console.warn(e);
+        recalculateLeaderboard(userStats);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadAllData();
   }, []);
 
   // ฟังก์ชันคำนวณและอัปเดตตารางคะแนนทั้งหมด
@@ -248,10 +255,8 @@ export default function RankingScreen() {
     
     setUserStats((prev) => {
       const updated = { ...prev, [key]: val === '' ? 0 : numVal };
-      // บันทึกลงใน localStorage
-      try {
-        localStorage.setItem('aura_user_stats', JSON.stringify(updated));
-      } catch (e) {}
+      // บันทึกลงใน AsyncStorage
+      AsyncStorage.setItem('aura_user_stats', JSON.stringify(updated)).catch(e => console.warn(e));
       
       // คำนวณอันดับใหม่ทันที
       recalculateLeaderboard(updated);
@@ -260,24 +265,24 @@ export default function RankingScreen() {
   };
 
   // สลับประเภทความสนใจของผู้ใช้หลัก
-  const handleToggleUserTeam = (teamId: 'lose' | 'gain' | 'maintain') => {
-    setUserStats((prev) => {
-      const updated = { ...prev, team: teamId };
-      try {
-        localStorage.setItem('aura_user_stats', JSON.stringify(updated));
-        
-        // ซิงก์เป้าหมายกลับไปยังโปรไฟล์หลัก
-        const savedProfile = localStorage.getItem('aura_user_profile');
-        if (savedProfile) {
-          const profile = JSON.parse(savedProfile);
-          profile.goal = teamId === 'lose' ? 'fat-loss' : teamId === 'gain' ? 'muscle-gain' : 'maintenance';
-          localStorage.setItem('aura_user_profile', JSON.stringify(profile));
-        }
-      } catch (e) {}
+  const handleToggleUserTeam = async (teamId: 'lose' | 'gain' | 'maintain') => {
+    const updated = { ...userStats, team: teamId };
+    setUserStats(updated);
+    recalculateLeaderboard(updated);
+
+    try {
+      await AsyncStorage.setItem('aura_user_stats', JSON.stringify(updated));
       
-      recalculateLeaderboard(updated);
-      return updated;
-    });
+      // ซิงก์เป้าหมายกลับไปยังโปรไฟล์หลัก
+      const savedProfile = await AsyncStorage.getItem('aura_user_profile');
+      if (savedProfile) {
+        const profile = JSON.parse(savedProfile);
+        profile.goal = teamId === 'lose' ? 'fat-loss' : teamId === 'gain' ? 'muscle-gain' : 'maintenance';
+        await AsyncStorage.setItem('aura_user_profile', JSON.stringify(profile));
+      }
+    } catch (e) {
+      console.warn(e);
+    }
   };
 
   // กรองตารางจัดอันดับเดี่ยว

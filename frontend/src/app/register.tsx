@@ -24,6 +24,7 @@ export default function RegisterScreen() {
   const router = useRouter();
 
   // บัญชีผู้ใช้
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -71,6 +72,7 @@ export default function RegisterScreen() {
     const carbs = Math.round((targetCalories - (protein * 4 + fat * 9)) / 4); // คาร์บส่วนที่เหลือ
 
     return {
+      name: name.trim(),
       gender,
       weight: w,
       height: h,
@@ -89,6 +91,11 @@ export default function RegisterScreen() {
 
   const handleRegister = async () => {
     setErrorMsg('');
+
+    if (!name.trim()) {
+      setErrorMsg('กรุณากรอกชื่อหรือนามแฝงสำหรับตารางจัดอันดับ');
+      return;
+    }
 
     if (!email || !password || !confirmPassword) {
       setErrorMsg('กรุณากรอกข้อมูลบัญชีให้ครบถ้วน');
@@ -174,6 +181,19 @@ export default function RegisterScreen() {
 
               {/* ส่วนบัญชีผู้ใช้ */}
               <Text style={styles.sectionTitle}>🔑 ข้อมูลบัญชีผู้ใช้</Text>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>ชื่อ / นามแฝง (แสดงในตารางคะแนน)</Text>
+                <TextInput
+                  style={styles.input}
+                  value={name}
+                  onChangeText={setName}
+                  placeholder="เช่น คุณอาร์ม (Arm)"
+                  placeholderTextColor="#94A3B8"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+              </View>
               
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>อีเมล</Text>
