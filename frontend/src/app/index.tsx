@@ -25,6 +25,7 @@ import {
   DEFAULT_WEEKLY_WORKOUTS,
 } from '../data/plannerData';
 import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface ProfileData {
   gender: 'male' | 'female';
@@ -125,124 +126,222 @@ export default function HomeScreen() {
   const [userBodyFat, setUserBodyFat] = useState<string>('');
   const [userMuscle, setUserMuscle] = useState<string>('');
 
-  // โหลดข้อมูลจาก LocalStorage เมื่อเริ่มต้น
-  useEffect(() => {
+  // ซิงก์ข้อมูลขึ้นเซิร์ฟเวอร์หลังบ้าน
+  const syncDataToBackend = async (
+    profile: ProfileData | null, 
+    meals: any, 
+    workouts: any, 
+    history: WeightEntry[]
+  ) => {
     try {
-      const savedMeals = localStorage.getItem('aura_weekly_meals');
-      const savedExercises = localStorage.getItem('aura_completed_exercises_v2') || localStorage.getItem('aura_completed_exercises');
-      const savedWater = localStorage.getItem('aura_water_intake');
-      const savedProfile = localStorage.getItem('aura_user_profile');
-      const savedWeightHistory = localStorage.getItem('aura_weight_history');
-      const savedChecklist = localStorage.getItem('aura_daily_checklist');
-      const savedTwoWeekPlan = localStorage.getItem('aura_two_week_workout_plan');
+      const token = await AsyncStorage.getItem('@aura_session_token');
+      if (!token) return;
 
-      if (savedMeals) {
-        setWeeklyMeals(JSON.parse(savedMeals));
-      } else {
-        setWeeklyMeals(DEFAULT_WEEKLY_MEALS);
-        localStorage.setItem('aura_weekly_meals', JSON.stringify(DEFAULT_WEEKLY_MEALS));
+      const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      };
+
+      if (profile) {
+        await fetch('http://localhost:3000/api/user/profile', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(profile)
+        });
       }
 
-      if (savedExercises) {
-        setCompletedExercises(JSON.parse(savedExercises));
-      } else {
-        setCompletedExercises({});
+      if (meals) {
+        await fetch('http://localhost:3000/api/user/meals', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(meals)
+        });
       }
 
-      if (savedWater) {
-        setWaterIntake(JSON.parse(savedWater));
-      } else {
-        setWaterIntake({});
-      }
-
-      if (savedProfile) {
-        setUserProfile(JSON.parse(savedProfile));
-        setShowCalculatorForm(false);
-      } else {
-        setUserProfile(null);
-        setShowCalculatorForm(true); // ถ้ายังไม่มีโปรไฟล์ ให้แสดงฟอร์มคำนวณก่อน
-      }
-
-      if (savedWeightHistory) {
-        setWeightHistory(JSON.parse(savedWeightHistory));
-      } else {
-        const defaultHistory = [
-          { date: '21/5', weight: 72.5 },
-          { date: '22/5', weight: 72.1 },
-          { date: '23/5', weight: 71.8 },
-          { date: '24/5', weight: 71.5 },
-          { date: '25/5', weight: 71.2 }
-        ];
-        setWeightHistory(defaultHistory);
-        localStorage.setItem('aura_weight_history', JSON.stringify(defaultHistory));
-      }
-
-      if (savedChecklist) {
-        setDailyChecklist(JSON.parse(savedChecklist));
-      } else {
-        setDailyChecklist({});
-      }
-
-      if (savedTwoWeekPlan) {
-        setTwoWeekWorkoutPlan(JSON.parse(savedTwoWeekPlan));
-      } else {
-        const defaultTwoWeek = {
-          week1: DEFAULT_WEEKLY_WORKOUTS,
-          week2: generateDefaultWeek2Workouts()
-        };
-        setTwoWeekWorkoutPlan(defaultTwoWeek);
-        localStorage.setItem('aura_two_week_workout_plan', JSON.stringify(defaultTwoWeek));
-      }
-
-      const savedTwoWeekMealPlan = localStorage.getItem('aura_two_week_meal_plan');
-      if (savedTwoWeekMealPlan) {
-        setTwoWeekMealPlan(JSON.parse(savedTwoWeekMealPlan));
-      } else {
-        const defaultTwoWeekMeals = {
-          week1: DEFAULT_WEEKLY_MEALS,
-          week2: generateDefaultWeek2Meals()
-        };
-        setTwoWeekMealPlan(defaultTwoWeekMeals);
-        localStorage.setItem('aura_two_week_meal_plan', JSON.stringify(defaultTwoWeekMeals));
-      }
-
-      // โหลดและดึงค่าสถิติมวลร่างกายล่าสุด
-      const savedUserStats = localStorage.getItem('aura_user_stats');
-      if (savedUserStats) {
-        const stats = JSON.parse(savedUserStats);
-        setUserWeight(stats.currentWeight ? String(stats.currentWeight) : '');
-        setUserBodyFat(stats.currentBodyFat ? String(stats.currentBodyFat) : '');
-        setUserMuscle(stats.currentMuscleMass ? String(stats.currentMuscleMass) : '');
-      } else if (savedProfile) {
-        const profile = JSON.parse(savedProfile);
-        setUserWeight(profile.weight ? String(profile.weight) : '');
-        setUserBodyFat('20');
-        setUserMuscle('30');
+      if (workouts) {
+        await fetch('http://localhost:3000/api/user/workouts', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(workouts)
+        });
       }
     } catch (e) {
-      console.warn('Failed to load storage data:', e);
-      setWeeklyMeals(DEFAULT_WEEKLY_MEALS);
-      setCompletedExercises({});
-      setWaterIntake({});
-      setWeightHistory([]);
-      setDailyChecklist({});
-      setTwoWeekWorkoutPlan({
-        week1: DEFAULT_WEEKLY_WORKOUTS,
-        week2: DEFAULT_WEEKLY_WORKOUTS
-      });
-      setTwoWeekMealPlan({
-        week1: DEFAULT_WEEKLY_MEALS,
-        week2: DEFAULT_WEEKLY_MEALS
-      });
-    } finally {
-      setIsLoading(false);
+      console.warn('Backend sync failed:', e);
     }
-  }, []);
+  };
+
+  // โดนบังคับให้ออกจากระบบ
+  const handleLogout = async () => {
+    try {
+      await AsyncStorage.removeItem('@aura_session_token');
+      await AsyncStorage.removeItem('@aura_user_email');
+      await AsyncStorage.removeItem('@aura_user_id');
+      alert('ออกจากระบบเรียบร้อยแล้ว');
+      router.replace('/login');
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  // โหลดข้อมูลเมื่อเริ่มต้น
+  useEffect(() => {
+    const loadAllData = async () => {
+      try {
+        const token = await AsyncStorage.getItem('@aura_session_token');
+        if (!token) {
+          router.replace('/login');
+          return;
+        }
+
+        setIsLoading(true);
+
+        // 1. ดึงข้อมูลจากเซิร์ฟเวอร์หลังบ้านก่อน
+        let backendProfile = null;
+        let backendMeals = null;
+        let backendWorkouts = null;
+        let backendWeight = null;
+
+        try {
+          const headers = {
+            'Authorization': `Bearer ${token}`
+          };
+
+          const pRes = await fetch('http://localhost:3000/api/user/profile', { headers });
+          if (pRes.ok) backendProfile = await pRes.json();
+
+          const mRes = await fetch('http://localhost:3000/api/user/meals', { headers });
+          if (mRes.ok) backendMeals = await mRes.json();
+
+          const wRes = await fetch('http://localhost:3000/api/user/workouts', { headers });
+          if (wRes.ok) backendWorkouts = await wRes.json();
+
+          const wtRes = await fetch('http://localhost:3000/api/user/weight', { headers });
+          if (wtRes.ok) backendWeight = await wtRes.json();
+        } catch (err) {
+          console.warn('Failed to load from backend API, using local fallback:', err);
+        }
+
+        // 2. ดึงข้อมูลจาก AsyncStorage
+        const savedMeals = await AsyncStorage.getItem('aura_weekly_meals');
+        const savedExercises = await AsyncStorage.getItem('aura_completed_exercises_v2') || await AsyncStorage.getItem('aura_completed_exercises');
+        const savedWater = await AsyncStorage.getItem('aura_water_intake');
+        const savedProfile = await AsyncStorage.getItem('aura_user_profile');
+        const savedWeightHistory = await AsyncStorage.getItem('aura_weight_history');
+        const savedChecklist = await AsyncStorage.getItem('aura_daily_checklist');
+        const savedTwoWeekPlan = await AsyncStorage.getItem('aura_two_week_workout_plan');
+        const savedTwoWeekMealPlan = await AsyncStorage.getItem('aura_two_week_meal_plan');
+        const savedUserStats = await AsyncStorage.getItem('aura_user_stats');
+
+        // 3. กำหนดค่าโปรไฟล์
+        let profile = null;
+        if (backendProfile) {
+          profile = backendProfile;
+          await AsyncStorage.setItem('aura_user_profile', JSON.stringify(backendProfile));
+        } else if (savedProfile) {
+          profile = JSON.parse(savedProfile);
+        }
+
+        if (profile) {
+          setUserProfile(profile);
+          setShowCalculatorForm(false);
+        } else {
+          setUserProfile(null);
+          setShowCalculatorForm(true);
+        }
+
+        // 4. กำหนดค่าแผนอาหาร
+        if (backendMeals && backendMeals.week1 && backendMeals.week2) {
+          setTwoWeekMealPlan(backendMeals);
+          setWeeklyMeals(backendMeals[activeWeek] || backendMeals.week1);
+          await AsyncStorage.setItem('aura_two_week_meal_plan', JSON.stringify(backendMeals));
+        } else if (savedTwoWeekMealPlan) {
+          const plan = JSON.parse(savedTwoWeekMealPlan);
+          setTwoWeekMealPlan(plan);
+          setWeeklyMeals(plan[activeWeek] || plan.week1 || DEFAULT_WEEKLY_MEALS);
+        } else {
+          const defaultTwoWeekMeals = {
+            week1: DEFAULT_WEEKLY_MEALS,
+            week2: generateDefaultWeek2Meals()
+          };
+          setTwoWeekMealPlan(defaultTwoWeekMeals);
+          setWeeklyMeals(DEFAULT_WEEKLY_MEALS);
+          await AsyncStorage.setItem('aura_two_week_meal_plan', JSON.stringify(defaultTwoWeekMeals));
+        }
+
+        // 5. กำหนดค่าแผนออกกำลังกาย
+        if (backendWorkouts && backendWorkouts.week1 && backendWorkouts.week2) {
+          setTwoWeekWorkoutPlan(backendWorkouts);
+          await AsyncStorage.setItem('aura_two_week_workout_plan', JSON.stringify(backendWorkouts));
+        } else if (savedTwoWeekPlan) {
+          setTwoWeekWorkoutPlan(JSON.parse(savedTwoWeekPlan));
+        } else {
+          const defaultTwoWeek = {
+            week1: DEFAULT_WEEKLY_WORKOUTS,
+            week2: generateDefaultWeek2Workouts()
+          };
+          setTwoWeekWorkoutPlan(defaultTwoWeek);
+          await AsyncStorage.setItem('aura_two_week_workout_plan', JSON.stringify(defaultTwoWeek));
+        }
+
+        // 6. กำหนดค่าน้ำหนัก
+        if (backendWeight && backendWeight.length > 0) {
+          setWeightHistory(backendWeight);
+          await AsyncStorage.setItem('aura_weight_history', JSON.stringify(backendWeight));
+        } else if (savedWeightHistory) {
+          setWeightHistory(JSON.parse(savedWeightHistory));
+        } else {
+          const defaultHistory = [
+            { date: '21/5', weight: profile?.weight || 72.5 },
+            { date: '22/5', weight: profile?.weight || 72.1 },
+            { date: '23/5', weight: profile?.weight || 71.8 },
+            { date: '24/5', weight: profile?.weight || 71.5 },
+            { date: '25/5', weight: profile?.weight || 71.2 }
+          ];
+          setWeightHistory(defaultHistory);
+          await AsyncStorage.setItem('aura_weight_history', JSON.stringify(defaultHistory));
+        }
+
+        // 7. กำหนดค่าอื่นๆ
+        if (savedExercises) setCompletedExercises(JSON.parse(savedExercises));
+        else setCompletedExercises({});
+
+        if (savedWater) setWaterIntake(JSON.parse(savedWater));
+        else setWaterIntake({});
+
+        if (savedChecklist) setDailyChecklist(JSON.parse(savedChecklist));
+        else setDailyChecklist({});
+
+        // โหลดและดึงค่าสถิติมวลร่างกายล่าสุด
+        if (savedUserStats) {
+          const stats = JSON.parse(savedUserStats);
+          setUserWeight(stats.currentWeight ? String(stats.currentWeight) : '');
+          setUserBodyFat(stats.currentBodyFat ? String(stats.currentBodyFat) : '');
+          setUserMuscle(stats.currentMuscleMass ? String(stats.currentMuscleMass) : '');
+        } else if (profile) {
+          setUserWeight(profile.weight ? String(profile.weight) : '');
+          setUserBodyFat('20');
+          setUserMuscle('30');
+        }
+
+      } catch (e) {
+        console.warn('Failed to load storage data:', e);
+        setWeeklyMeals(DEFAULT_WEEKLY_MEALS);
+        setCompletedExercises({});
+        setWaterIntake({});
+        setWeightHistory([]);
+        setDailyChecklist({});
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadAllData();
+  }, [activeWeek]);
 
   // บันทึกโปรไฟล์สุขภาพ
-  const handleSaveProfile = (profile: ProfileData) => {
+  const handleSaveProfile = async (profile: ProfileData) => {
     setUserProfile(profile);
-    localStorage.setItem('aura_user_profile', JSON.stringify(profile));
+    await AsyncStorage.setItem('aura_user_profile', JSON.stringify(profile));
     setShowCalculatorForm(false);
 
     // บันทึกน้ำหนักเข้าประวัติสำหรับวันนี้อัตโนมัติ
@@ -255,13 +354,30 @@ export default function HomeScreen() {
     const trimmedHistory = updatedHistory.slice(-7); // เก็บสูงสุด 7 วัน
     
     setWeightHistory(trimmedHistory);
-    localStorage.setItem('aura_weight_history', JSON.stringify(trimmedHistory));
+    await AsyncStorage.setItem('aura_weight_history', JSON.stringify(trimmedHistory));
+
+    // ซิงก์ขึ้นเซิร์ฟเวอร์
+    await syncDataToBackend(profile, twoWeekMealPlan, twoWeekWorkoutPlan, trimmedHistory);
+    
+    try {
+      const token = await AsyncStorage.getItem('@aura_session_token');
+      if (token) {
+        await fetch('http://localhost:3000/api/user/weight', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ date: dateStr, weight: profile.weight })
+        });
+      }
+    } catch (e) {}
 
     alert('บันทึกข้อมูลและคำนวณแคลอรีเป้าหมายประจำวันเรียบร้อยแล้ว!');
   };
 
   // บันทึกน้ำหนักเพิ่ม
-  const handleAddWeight = (weightVal: number) => {
+  const handleAddWeight = async (weightVal: number) => {
     const today = new Date();
     const dateStr = `${today.getDate()}/${today.getMonth() + 1}`;
     
@@ -270,22 +386,39 @@ export default function HomeScreen() {
     const trimmedHistory = updatedHistory.slice(-7);
     
     setWeightHistory(trimmedHistory);
-    localStorage.setItem('aura_weight_history', JSON.stringify(trimmedHistory));
+    await AsyncStorage.setItem('aura_weight_history', JSON.stringify(trimmedHistory));
 
     // อัปเดตน้ำหนักในโปรไฟล์สุขภาพด้วย
+    let updatedProfile = null;
     if (userProfile) {
-      const updatedProfile = { ...userProfile, weight: weightVal };
-      // คำนวณ BMI ใหม่
+      updatedProfile = { ...userProfile, weight: weightVal };
       const heightInMeters = updatedProfile.height / 100;
       updatedProfile.bmi = parseFloat((weightVal / (heightInMeters * heightInMeters)).toFixed(1));
       
       setUserProfile(updatedProfile);
-      localStorage.setItem('aura_user_profile', JSON.stringify(updatedProfile));
+      await AsyncStorage.setItem('aura_user_profile', JSON.stringify(updatedProfile));
     }
+
+    // ซิงก์ขึ้นเซิร์ฟเวอร์
+    await syncDataToBackend(updatedProfile, twoWeekMealPlan, twoWeekWorkoutPlan, trimmedHistory);
+    
+    try {
+      const token = await AsyncStorage.getItem('@aura_session_token');
+      if (token) {
+        await fetch('http://localhost:3000/api/user/weight', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ date: dateStr, weight: weightVal })
+        });
+      }
+    } catch (e) {}
   };
 
   // บันทึกและคำนวณสถิติมวลร่างกายจากหน้าหลัก
-  const handleSaveStatsFromDashboard = () => {
+  const handleSaveStatsFromDashboard = async () => {
     const weightVal = parseFloat(userWeight);
     const fatVal = parseFloat(userBodyFat);
     const muscleVal = parseFloat(userMuscle);
@@ -296,7 +429,7 @@ export default function HomeScreen() {
     }
 
     try {
-      const savedUserStats = localStorage.getItem('aura_user_stats');
+      const savedUserStats = await AsyncStorage.getItem('aura_user_stats');
       let baseStats = {
         id: 'user',
         name: 'ตัวคุณเอง',
@@ -327,10 +460,10 @@ export default function HomeScreen() {
         baseStats.initialMuscleMass = muscleVal;
       }
 
-      localStorage.setItem('aura_user_stats', JSON.stringify(baseStats));
+      await AsyncStorage.setItem('aura_user_stats', JSON.stringify(baseStats));
 
-      // บันทึกน้ำหนักและจำลองลงกราฟน้ำหนักของวันนี้ด้วย
-      handleAddWeight(weightVal);
+      // บันทึกน้ำหนักลงกราฟน้ำหนักของวันนี้ด้วย
+      await handleAddWeight(weightVal);
 
       alert('📊 อัปเดตมวลร่างกายและคำนวณคะแนนศักยภาพจัดอันดับใหม่เรียบร้อยแล้ว!');
     } catch (e) {
@@ -339,7 +472,8 @@ export default function HomeScreen() {
   };
 
   // อัปเดตอาหารรายวัน
-  const handleUpdateMeal = (mealIndex: number, meal: Meal) => {
+  const handleUpdateMeal = async (mealIndex: number, meal: Meal) => {
+    let finalMealsPlan = null;
     if (twoWeekMealPlan) {
       const updatedPlan = { ...twoWeekMealPlan };
       if (!updatedPlan[activeWeek]) {
@@ -350,8 +484,9 @@ export default function HomeScreen() {
       }
       updatedPlan[activeWeek][activeDay][mealIndex] = meal;
       setTwoWeekMealPlan(updatedPlan);
+      finalMealsPlan = updatedPlan;
       try {
-        localStorage.setItem('aura_two_week_meal_plan', JSON.stringify(updatedPlan));
+        await AsyncStorage.setItem('aura_two_week_meal_plan', JSON.stringify(updatedPlan));
       } catch (e) {}
     } else {
       const updatedMeals = { ...weeklyMeals };
@@ -361,13 +496,18 @@ export default function HomeScreen() {
       updatedMeals[activeDay][mealIndex] = meal;
       setWeeklyMeals(updatedMeals);
       try {
-        localStorage.setItem('aura_weekly_meals', JSON.stringify(updatedMeals));
+        await AsyncStorage.setItem('aura_weekly_meals', JSON.stringify(updatedMeals));
       } catch (e) {}
+    }
+
+    // ซิงก์ขึ้นเซิร์ฟเวอร์หลังบ้าน
+    if (finalMealsPlan) {
+      await syncDataToBackend(userProfile, finalMealsPlan, twoWeekWorkoutPlan, weightHistory);
     }
   };
 
   // อัปเดตการออกกำลังกาย (Toggle)
-  const handleToggleExercise = (exerciseName: string) => {
+  const handleToggleExercise = async (exerciseName: string) => {
     const updatedExercises = { ...completedExercises };
     const compKey = `${activeWeek}_${activeDay}`;
     if (!updatedExercises[compKey]) {
@@ -383,7 +523,7 @@ export default function HomeScreen() {
 
     setCompletedExercises(updatedExercises);
     try {
-      localStorage.setItem('aura_completed_exercises_v2', JSON.stringify(updatedExercises));
+      await AsyncStorage.setItem('aura_completed_exercises_v2', JSON.stringify(updatedExercises));
     } catch (e) {}
   };
 
@@ -603,53 +743,53 @@ export default function HomeScreen() {
   };
 
   // เพิ่มน้ำดื่ม
-  const handleAddWater = (amount: number) => {
+  const handleAddWater = async (amount: number) => {
     const updatedWater = { ...waterIntake };
     const currentWater = updatedWater[activeDay] || 0;
     updatedWater[activeDay] = currentWater + amount;
     setWaterIntake(updatedWater);
     try {
-      localStorage.setItem('aura_water_intake', JSON.stringify(updatedWater));
+      await AsyncStorage.setItem('aura_water_intake', JSON.stringify(updatedWater));
     } catch (e) {}
 
     // อัปเดตเช็คลิสต์เมื่อดื่มน้ำครบ 2,000 มล.
     if (currentWater + amount >= 2000) {
-      updateChecklistItem('water', true);
+      await updateChecklistItem('water', true);
     }
   };
 
   // รีเซ็ตน้ำดื่ม
-  const handleResetWater = () => {
+  const handleResetWater = async () => {
     const updatedWater = { ...waterIntake };
     updatedWater[activeDay] = 0;
     setWaterIntake(updatedWater);
     try {
-      localStorage.setItem('aura_water_intake', JSON.stringify(updatedWater));
+      await AsyncStorage.setItem('aura_water_intake', JSON.stringify(updatedWater));
     } catch (e) {}
-    updateChecklistItem('water', false);
+    await updateChecklistItem('water', false);
   };
 
   // อัปเดตเช็คลิสต์รายวัน
-  const handleToggleChecklist = (taskId: string) => {
+  const handleToggleChecklist = async (taskId: string) => {
     const dayCheck = dailyChecklist[activeDay] || {};
     const updatedDayCheck = { ...dayCheck, [taskId]: !dayCheck[taskId] };
     
     const updatedChecklist = { ...dailyChecklist, [activeDay]: updatedDayCheck };
     setDailyChecklist(updatedChecklist);
     try {
-      localStorage.setItem('aura_daily_checklist', JSON.stringify(updatedChecklist));
+      await AsyncStorage.setItem('aura_daily_checklist', JSON.stringify(updatedChecklist));
     } catch (e) {}
   };
 
   // ฟังก์ชันช่วยเหลือสำหรับปรับค่าเช็คลิสต์อัตโนมัติ (เช่น ดื่มน้ำครบ)
-  const updateChecklistItem = (taskId: string, status: boolean) => {
+  const updateChecklistItem = async (taskId: string, status: boolean) => {
     const dayCheck = dailyChecklist[activeDay] || {};
     const updatedDayCheck = { ...dayCheck, [taskId]: status };
     
     const updatedChecklist = { ...dailyChecklist, [activeDay]: updatedDayCheck };
     setDailyChecklist(updatedChecklist);
     try {
-      localStorage.setItem('aura_daily_checklist', JSON.stringify(updatedChecklist));
+      await AsyncStorage.setItem('aura_daily_checklist', JSON.stringify(updatedChecklist));
     } catch (e) {}
   };
 
@@ -764,9 +904,14 @@ export default function HomeScreen() {
               <View style={styles.card}>
                 <View style={styles.profileSummaryHeader}>
                   <Text style={styles.columnTitle}>👤 ข้อมูลร่างกายของคุณ</Text>
-                  <Pressable style={styles.editBtn} onPress={() => setShowCalculatorForm(true)}>
-                    <Text style={styles.editBtnText}>แก้ไขข้อมูล</Text>
-                  </Pressable>
+                  <View style={{ flexDirection: 'row', gap: 8 }}>
+                    <Pressable style={styles.editBtn} onPress={() => setShowCalculatorForm(true)}>
+                      <Text style={styles.editBtnText}>แก้ไขข้อมูล</Text>
+                    </Pressable>
+                    <Pressable style={[styles.editBtn, { backgroundColor: '#EF4444' }]} onPress={handleLogout}>
+                      <Text style={[styles.editBtnText, { color: '#FFFFFF' }]}>ออกจากระบบ</Text>
+                    </Pressable>
+                  </View>
                 </View>
 
                 {userProfile && (

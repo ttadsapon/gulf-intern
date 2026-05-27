@@ -27,6 +27,22 @@ export default function AppTabs() {
           <TabTrigger name="explore" href="/explore" asChild>
             <TabButton>คู่มือระบบ</TabButton>
           </TabTrigger>
+          {/* ซ่อนหน้าเมนูอื่นๆ ไว้ใน Tab Navigator เพื่อให้ระบบ Router รู้จักเส้นทางและเปลี่ยนหน้าด้วย router.push ได้ */}
+          <TabTrigger name="meal-planner" href="/meal-planner" style={{ display: 'none' }} asChild>
+            <View />
+          </TabTrigger>
+          <TabTrigger name="workout-planner" href="/workout-planner" style={{ display: 'none' }} asChild>
+            <View />
+          </TabTrigger>
+          <TabTrigger name="ranking" href="/ranking" style={{ display: 'none' }} asChild>
+            <View />
+          </TabTrigger>
+          <TabTrigger name="login" href="/login" style={{ display: 'none' }} asChild>
+            <View />
+          </TabTrigger>
+          <TabTrigger name="register" href="/register" style={{ display: 'none' }} asChild>
+            <View />
+          </TabTrigger>
         </CustomTabList>
       </TabList>
     </Tabs>
