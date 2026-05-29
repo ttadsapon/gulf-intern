@@ -28,23 +28,24 @@ interface MemberStats {
   workoutCompletion: number; // 0-100 %
   mealCompletion: number;    // 0-100 %
   potentialScore?: number;
+  height?: number;
 }
 
 const MOCK_MEMBERS: MemberStats[] = [
   // ทีมลดน้ำหนัก (lose)
-  { id: 'm1', name: 'คุณออม (Aom)', avatar: '🏃‍♀️', team: 'lose', initialWeight: 75.2, currentWeight: 69.8, initialBodyFat: 28.5, currentBodyFat: 23.2, initialMuscleMass: 24.5, currentMuscleMass: 24.3, workoutCompletion: 92, mealCompletion: 88 },
-  { id: 'm2', name: 'คุณเต้ย (Toey)', avatar: '🏃‍♂️', team: 'lose', initialWeight: 88.5, currentWeight: 83.1, initialBodyFat: 32.1, currentBodyFat: 27.8, initialMuscleMass: 29.1, currentMuscleMass: 28.8, workoutCompletion: 85, mealCompletion: 80 },
-  { id: 'm3', name: 'คุณพีช (Peach)', avatar: '👩‍🦰', team: 'lose', initialWeight: 62.0, currentWeight: 59.5, initialBodyFat: 26.0, currentBodyFat: 22.1, initialMuscleMass: 20.8, currentMuscleMass: 21.0, workoutCompletion: 88, mealCompletion: 92 },
+  { id: 'm1', name: 'คุณออม (Aom)', avatar: '🏃‍♀️', team: 'lose', initialWeight: 75.2, currentWeight: 69.8, initialBodyFat: 28.5, currentBodyFat: 23.2, initialMuscleMass: 24.5, currentMuscleMass: 24.3, workoutCompletion: 92, mealCompletion: 88, height: 165 },
+  { id: 'm2', name: 'คุณเต้ย (Toey)', avatar: '🏃‍♂️', team: 'lose', initialWeight: 88.5, currentWeight: 83.1, initialBodyFat: 32.1, currentBodyFat: 27.8, initialMuscleMass: 29.1, currentMuscleMass: 28.8, workoutCompletion: 85, mealCompletion: 80, height: 178 },
+  { id: 'm3', name: 'คุณพีช (Peach)', avatar: '👩‍🦰', team: 'lose', initialWeight: 62.0, currentWeight: 59.5, initialBodyFat: 26.0, currentBodyFat: 22.1, initialMuscleMass: 20.8, currentMuscleMass: 21.0, workoutCompletion: 88, mealCompletion: 92, height: 160 },
   
   // ทีมเพิ่มกล้ามเนื้อ (gain)
-  { id: 'm4', name: 'คุณนนท์ (Nont)', avatar: '🏋️‍♂️', team: 'gain', initialWeight: 65.4, currentWeight: 69.1, initialBodyFat: 12.5, currentBodyFat: 13.0, initialMuscleMass: 31.2, currentMuscleMass: 33.8, workoutCompletion: 95, mealCompletion: 90 },
-  { id: 'm5', name: 'คุณปอนด์ (Pond)', avatar: '💪', team: 'gain', initialWeight: 70.2, currentWeight: 73.5, initialBodyFat: 14.2, currentBodyFat: 14.8, initialMuscleMass: 33.1, currentMuscleMass: 35.4, workoutCompletion: 90, mealCompletion: 85 },
-  { id: 'm6', name: 'คุณมาร์ค (Mark)', avatar: '🧑‍💻', team: 'gain', initialWeight: 58.5, currentWeight: 61.2, initialBodyFat: 11.0, currentBodyFat: 11.8, initialMuscleMass: 28.0, currentMuscleMass: 29.5, workoutCompletion: 80, mealCompletion: 82 },
+  { id: 'm4', name: 'คุณนนท์ (Nont)', avatar: '🏋️‍♂️', team: 'gain', initialWeight: 65.4, currentWeight: 69.1, initialBodyFat: 12.5, currentBodyFat: 13.0, initialMuscleMass: 31.2, currentMuscleMass: 33.8, workoutCompletion: 95, mealCompletion: 90, height: 172 },
+  { id: 'm5', name: 'คุณปอนด์ (Pond)', avatar: '💪', team: 'gain', initialWeight: 70.2, currentWeight: 73.5, initialBodyFat: 14.2, currentBodyFat: 14.8, initialMuscleMass: 33.1, currentMuscleMass: 35.4, workoutCompletion: 90, mealCompletion: 85, height: 175 },
+  { id: 'm6', name: 'คุณมาร์ค (Mark)', avatar: '🧑‍💻', team: 'gain', initialWeight: 58.5, currentWeight: 61.2, initialBodyFat: 11.0, currentBodyFat: 11.8, initialMuscleMass: 28.0, currentMuscleMass: 29.5, workoutCompletion: 80, mealCompletion: 82, height: 168 },
   
   // ทีมรักษาสุขภาพ (maintain)
-  { id: 'm7', name: 'คุณกิ๊ฟ (Gift)', avatar: '🧘‍♀️', team: 'maintain', initialWeight: 52.4, currentWeight: 52.3, initialBodyFat: 19.5, currentBodyFat: 19.3, initialMuscleMass: 19.8, currentMuscleMass: 20.0, workoutCompletion: 94, mealCompletion: 95 },
-  { id: 'm8', name: 'คุณวิว (View)', avatar: '👱‍♀️', team: 'maintain', initialWeight: 55.0, currentWeight: 55.2, initialBodyFat: 21.2, currentBodyFat: 21.3, initialMuscleMass: 20.5, currentMuscleMass: 20.6, workoutCompletion: 86, mealCompletion: 88 },
-  { id: 'm9', name: 'คุณเจเจ (JJ)', avatar: '👨‍⚕️', team: 'maintain', initialWeight: 68.5, currentWeight: 68.3, initialBodyFat: 16.5, currentBodyFat: 16.4, initialMuscleMass: 30.5, currentMuscleMass: 30.6, workoutCompletion: 90, mealCompletion: 91 },
+  { id: 'm7', name: 'คุณกิ๊ฟ (Gift)', avatar: '🧘‍♀️', team: 'maintain', initialWeight: 52.4, currentWeight: 52.3, initialBodyFat: 19.5, currentBodyFat: 19.3, initialMuscleMass: 19.8, currentMuscleMass: 20.0, workoutCompletion: 94, mealCompletion: 95, height: 160 },
+  { id: 'm8', name: 'คุณวิว (View)', avatar: '👱‍♀️', team: 'maintain', initialWeight: 55.0, currentWeight: 55.2, initialBodyFat: 21.2, currentBodyFat: 21.3, initialMuscleMass: 20.5, currentMuscleMass: 20.6, workoutCompletion: 86, mealCompletion: 88, height: 163 },
+  { id: 'm9', name: 'คุณเจเจ (JJ)', avatar: '👨‍⚕️', team: 'maintain', initialWeight: 68.5, currentWeight: 68.3, initialBodyFat: 16.5, currentBodyFat: 16.4, initialMuscleMass: 30.5, currentMuscleMass: 30.6, workoutCompletion: 90, mealCompletion: 91, height: 175 },
 ];
 
 // กิจกรรมแจ้งเตือนล่าสุดจำลอง
@@ -57,66 +58,86 @@ const MOCK_ACTIVITIES = [
 ];
 
 // 2. ฟังก์ชันคำนวณคะแนนศักยภาพ (Potential Score)
+const safeToNumber = (val: any, fallback = 0): number => {
+  if (val === undefined || val === null) return fallback;
+  const num = parseFloat(val);
+  return isNaN(num) ? fallback : num;
+};
+
+const safeToFixed = (val: any, decimals = 1, fallback = '0.0'): string => {
+  if (val === undefined || val === null) return fallback;
+  const num = parseFloat(val);
+  return isNaN(num) ? fallback : num.toFixed(decimals);
+};
+
 export const calculatePotentialScore = (member: MemberStats): number => {
-  const {
-    team,
-    initialWeight,
-    currentWeight,
-    initialBodyFat,
-    currentBodyFat,
-    initialMuscleMass,
-    currentMuscleMass,
-    workoutCompletion,
-    mealCompletion,
-  } = member;
+  const team = member.team || 'lose';
+  const initialWeight = safeToNumber(member.initialWeight, 75);
+  const currentWeight = safeToNumber(member.currentWeight, initialWeight || 75);
+  const initialBodyFat = safeToNumber(member.initialBodyFat, 24);
+  const currentBodyFat = safeToNumber(member.currentBodyFat, initialBodyFat || 24);
+  const initialMuscleMass = safeToNumber(member.initialMuscleMass, 28);
+  const currentMuscleMass = safeToNumber(member.currentMuscleMass, initialMuscleMass || 28);
+  const workoutCompletion = safeToNumber(member.workoutCompletion, 0);
+  const mealCompletion = safeToNumber(member.mealCompletion, 0);
+  const height = safeToNumber(member.height, 170);
 
   const consistency = (workoutCompletion + mealCompletion) / 2;
   let targetProgressScore = 0;
 
-  if (team === 'lose') {
-    // ทีมลดน้ำหนัก: ดัชนีความก้าวหน้า
-    const weightLossPercent = ((initialWeight - currentWeight) / initialWeight) * 100;
-    const bodyFatLossPercent = ((initialBodyFat - currentBodyFat) / initialBodyFat) * 100;
-    const muscleLossPercent = ((initialMuscleMass - currentMuscleMass) / initialMuscleMass) * 100;
+  if (team === 'maintain') {
+    // ทีมรักษาสุขภาพ: แบ่งเป็น 2 ส่วน
+    // ส่วนที่ 1: BMI ในวันสุดท้ายของกิจกรรมต้องอยู่ในช่วง 18.5 - 24.9 ถึงจะจัดอันดับได้ (มิฉะนั้นคะแนน = 0)
+    const heightInM = height / 100;
+    const bmi = heightInM > 0 ? currentWeight / (heightInM * heightInM) : 22;
+    const isBmiEligible = bmi >= 18.5 && bmi <= 24.9;
 
-    // น้ำหนักลดลง (บวก): 1% ลดลง = 6 คะแนน (สูงสุด 45)
-    const wlScore = Math.max(0, Math.min(45, weightLossPercent * 6));
-    // ไขมันลดลง (บวก): 1% ลดลง = 4 คะแนน (สูงสุด 35)
-    const bfScore = Math.max(0, Math.min(35, bodyFatLossPercent * 4));
-    // รักษากล้ามเนื้อ: ถ้ากล้ามเนื้อไม่ลดหรือเพิ่มขึ้น = 20 คะแนนเต็ม, ถ้าลดติดลบคะแนนตามสัดส่วน
-    const mmScore = muscleLossPercent <= 0 ? 20 : Math.max(0, 20 - muscleLossPercent * 10);
+    if (!isBmiEligible) {
+      return 0; // ไม่สามารถจัดอันดับได้ (คะแนนเป็น 0)
+    }
+
+    // ส่วนที่ 2: ค่าไขมันในร่างกาย เพิ่ม/ลด และ ค่ามวลกล้ามเนื้อ เพิ่ม/ลด
+    // - ค่าไขมัน: ไขมันลดลงหรือคงที่ได้คะแนนเต็ม 50, หากเพิ่มจะหักคะแนน
+    const fatLoss = initialBodyFat - currentBodyFat;
+    const bfScore = fatLoss >= 0 ? 50 : Math.max(0, 50 + fatLoss * 10);
+
+    // - ค่ามวลกล้ามเนื้อ: มวลกล้ามเนื้อเพิ่มหรือคงที่ได้คะแนนเต็ม 50, หากลดจะหักคะแนน
+    const muscleGain = currentMuscleMass - initialMuscleMass;
+    const mmScore = muscleGain >= 0 ? 50 : Math.max(0, 50 + muscleGain * 15);
+
+    targetProgressScore = bfScore + mmScore;
+  } else if (team === 'lose') {
+    // ทีมลดน้ำหนัก: ค่าไขมันในร่างกาย เพิ่ม/ลด, ค่ามวลกล้ามเนื้อ เพิ่ม/ลด, ค่าน้ำหนัก เพิ่ม/ลด
+    // - ค่าน้ำหนัก (สูงสุด 40 คะแนน): น้ำหนักลดลงได้คะแนน
+    const weightLoss = initialWeight - currentWeight;
+    const wlScore = weightLoss > 0 ? Math.min(40, weightLoss * 10) : 0;
+
+    // - ค่าไขมัน (สูงสุด 40 คะแนน): ไขมันลดลงได้คะแนน
+    const fatLoss = initialBodyFat - currentBodyFat;
+    const bfScore = fatLoss > 0 ? Math.min(40, fatLoss * 15) : 0;
+
+    // - ค่ามวลกล้ามเนื้อ (สูงสุด 20 คะแนน): รักษากล้ามเนื้อหรือเพิ่มกล้ามเนื้อ
+    const muscleGain = currentMuscleMass - initialMuscleMass;
+    const mmScore = muscleGain >= 0 ? 20 : Math.max(0, 20 + muscleGain * 10);
 
     targetProgressScore = wlScore + bfScore + mmScore;
-  } else if (team === 'gain') {
-    // ทีมเพิ่มกล้ามเนื้อ: ดัชนีความก้าวหน้า
-    const muscleGainPercent = ((currentMuscleMass - initialMuscleMass) / initialMuscleMass) * 100;
-    const weightGainPercent = ((currentWeight - initialWeight) / initialWeight) * 100;
-    const bodyFatIncreasePercent = ((currentBodyFat - initialBodyFat) / initialBodyFat) * 100;
-
-    // กล้ามเนื้อเพิ่มขึ้น (บวก): 1% เพิ่ม = 12 คะแนน (สูงสุด 50)
-    const mmScore = Math.max(0, Math.min(50, muscleGainPercent * 12));
-    // น้ำหนักตัวที่สมควรเพิ่ม (บวก): 1% เพิ่ม = 6 คะแนน (สูงสุด 30)
-    const wlScore = Math.max(0, Math.min(30, weightGainPercent * 6));
-    // การคุมระดับไขมันสะสม: ไขมันเพิ่มไม่เกิน 5% = 20 คะแนนเต็ม, ถ้าเพิ่มมากกว่านี้โดนหักคะแนน
-    const bfScore = bodyFatIncreasePercent <= 0 ? 20 : Math.max(0, 20 - Math.max(0, bodyFatIncreasePercent) * 4);
-
-    targetProgressScore = mmScore + wlScore + bfScore;
   } else {
-    // ทีมรักษาสุขภาพ: ดัชนีรักษาสมดุลความเสถียร
-    const weightDeviationPercent = Math.abs((currentWeight - initialWeight) / initialWeight) * 100;
-    const bodyFatDeviationPercent = Math.abs((currentBodyFat - initialBodyFat) / initialBodyFat) * 100;
+    // ทีมเพิ่มกล้ามเนื้อ: ค่าไขมันในร่างกาย เพิ่ม/ลด, ค่ามวลกล้ามเนื้อ เพิ่ม/ลด (ไม่คิดน้ำหนักตัว)
+    // - ค่ามวลกล้ามเนื้อ (สูงสุด 70 คะแนน): มวลกล้ามเนื้อเพิ่มขึ้นได้คะแนน
+    const muscleGain = currentMuscleMass - initialMuscleMass;
+    const mmScore = muscleGain > 0 ? Math.min(70, muscleGain * 20) : 0;
 
-    // น้ำหนักคงที่ (สูงสุด 50 คะแนน): หัก 5 คะแนนต่อความคลาดเคลื่อน 1%
-    const wlScore = Math.max(0, 50 - weightDeviationPercent * 8);
-    // ไขมันคงที่ (สูงสุด 50 คะแนน): หัก 5 คะแนนต่อความคลาดเคลื่อน 1%
-    const bfScore = Math.max(0, 50 - bodyFatDeviationPercent * 8);
+    // - ค่าไขมัน (สูงสุด 30 คะแนน): ไขมันลดลงหรือคงที่ได้คะแนนเต็ม 30, หากเพิ่มจะหักคะแนน
+    const fatLoss = initialBodyFat - currentBodyFat;
+    const bfScore = fatLoss >= 0 ? 30 : Math.max(0, 30 + fatLoss * 8);
 
-    targetProgressScore = wlScore + bfScore;
+    targetProgressScore = mmScore + bfScore;
   }
 
   // คะแนนสุดท้าย = (ความก้าวหน้าตามเป้าหมาย 70%) + (ความสม่ำเสมอในการออกกำลังกายและควบคุมอาหาร 30%)
   const finalScore = targetProgressScore * 0.7 + consistency * 0.3;
-  return Math.round(Math.max(0, Math.min(100, finalScore)));
+  const rounded = Math.round(finalScore);
+  return isNaN(rounded) ? 0 : Math.max(0, Math.min(100, rounded));
 };
 
 export default function RankingScreen() {
@@ -138,72 +159,20 @@ export default function RankingScreen() {
     currentMuscleMass: 28.6,
     workoutCompletion: 80,
     mealCompletion: 75,
+    height: 170,
   });
+
+  // สถานะเก็บสตริงสำหรับอินพุต เพื่อป้องกันปัญหาพิมพ์ทศนิยมหรือศูนย์
+  const [inputInitialWeight, setInputInitialWeight] = useState('');
+  const [inputCurrentWeight, setInputCurrentWeight] = useState('');
+  const [inputInitialBodyFat, setInputInitialBodyFat] = useState('');
+  const [inputCurrentBodyFat, setInputCurrentBodyFat] = useState('');
+  const [inputInitialMuscleMass, setInputInitialMuscleMass] = useState('');
+  const [inputCurrentMuscleMass, setInputCurrentMuscleMass] = useState('');
 
   const [leaderboardData, setLeaderboardData] = useState<MemberStats[]>([]);
   const [teamStats, setTeamStats] = useState<Record<string, { averagePotential: number; memberCount: number; color: string; label: string; icon: string }>>({});
   const [isLoading, setIsLoading] = useState(true);
-
-  // โหลดสถิติดั้งเดิมและคำนวณอันดับ
-  useEffect(() => {
-    const loadAllData = async () => {
-      try {
-        // ดึงโปรไฟล์ดั้งเดิมจาก AsyncStorage (ถ้ามี)
-        const savedProfile = await AsyncStorage.getItem('aura_user_profile');
-        const savedUserStats = await AsyncStorage.getItem('aura_user_stats');
-        
-        let baseStats = { ...userStats };
-        
-        if (savedProfile) {
-          const profile = JSON.parse(savedProfile);
-          baseStats.team = (profile.goal === 'fat-loss' ? 'lose' : profile.goal === 'muscle-gain' ? 'gain' : 'maintain') as any;
-          baseStats.initialWeight = profile.weight || 75;
-          if (profile.name) {
-            baseStats.name = profile.name;
-          }
-        }
-        
-        if (savedUserStats) {
-          baseStats = { ...baseStats, ...JSON.parse(savedUserStats) };
-        } else {
-          // อิงค่าน้ำหนักตัวปัจจุบันจากประวัติการลงบันทึกในหน้าหลัก
-          const savedHistory = await AsyncStorage.getItem('aura_weight_history');
-          if (savedHistory) {
-            const history = JSON.parse(savedHistory);
-            if (history.length > 0) {
-              baseStats.currentWeight = history[history.length - 1].weight;
-            }
-          }
-        }
-
-        // คำนวณความคืบหน้าการทำงานจริงของผู้ใช้ (Workout & Meal)
-        const savedExercises = (await AsyncStorage.getItem('aura_completed_exercises_v2')) || (await AsyncStorage.getItem('aura_completed_exercises'));
-        if (savedExercises) {
-          const completed = JSON.parse(savedExercises);
-          let totalCount = 0;
-          for (const key in completed) {
-            totalCount += completed[key].length;
-          }
-          // สมมติเปอร์เซ็นต์
-          baseStats.workoutCompletion = Math.min(100, Math.max(50, 60 + totalCount * 2));
-        }
-        
-        const savedMeals = await AsyncStorage.getItem('aura_two_week_meal_plan');
-        if (savedMeals) {
-          baseStats.mealCompletion = Math.min(100, Math.max(40, 78));
-        }
-
-        setUserStats(baseStats);
-        recalculateLeaderboard(baseStats);
-      } catch (e) {
-        console.warn(e);
-        recalculateLeaderboard(userStats);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    loadAllData();
-  }, []);
 
   // ฟังก์ชันคำนวณและอัปเดตตารางคะแนนทั้งหมด
   const recalculateLeaderboard = (currentUser: MemberStats) => {
@@ -248,17 +217,102 @@ export default function RankingScreen() {
     setTeamStats(calculatedTeamStats);
   };
 
-  // จัดการอัปเดตสถิติร่างกายของผู้ใช้
-  const handleUpdateUserStats = (key: keyof MemberStats, val: string) => {
+  // โหลดสถิติดั้งเดิมและคำนวณอันดับ
+  useEffect(() => {
+    const loadAllData = async () => {
+      try {
+        // ดึงโปรไฟล์ดั้งเดิมจาก AsyncStorage (ถ้ามี)
+        const savedProfile = await AsyncStorage.getItem('aura_user_profile');
+        const savedUserStats = await AsyncStorage.getItem('aura_user_stats');
+        
+        let baseStats = { ...userStats };
+        
+        if (savedProfile) {
+          const profile = JSON.parse(savedProfile);
+          baseStats.team = (profile.goal === 'fat-loss' ? 'lose' : profile.goal === 'muscle-gain' ? 'gain' : 'maintain') as any;
+          baseStats.initialWeight = parseFloat(profile.weight as any) || 75;
+          baseStats.height = parseFloat(profile.height as any) || 170;
+          if (profile.name) {
+            baseStats.name = profile.name;
+          }
+        }
+        
+        if (savedUserStats) {
+          const parsedStats = JSON.parse(savedUserStats);
+          baseStats = {
+            ...baseStats,
+            ...parsedStats,
+            initialWeight: parseFloat(parsedStats.initialWeight as any) || baseStats.initialWeight,
+            currentWeight: parseFloat(parsedStats.currentWeight as any) || baseStats.currentWeight,
+            initialBodyFat: parseFloat(parsedStats.initialBodyFat as any) || baseStats.initialBodyFat,
+            currentBodyFat: parseFloat(parsedStats.currentBodyFat as any) || baseStats.currentBodyFat,
+            initialMuscleMass: parseFloat(parsedStats.initialMuscleMass as any) || baseStats.initialMuscleMass,
+            currentMuscleMass: parseFloat(parsedStats.currentMuscleMass as any) || baseStats.currentMuscleMass,
+          };
+        } else {
+          // อิงค่าน้ำหนักตัวปัจจุบันจากประวัติการลงบันทึกในหน้าหลัก
+          const savedHistory = await AsyncStorage.getItem('aura_weight_history');
+          if (savedHistory) {
+            const history = JSON.parse(savedHistory);
+            if (history.length > 0) {
+              baseStats.currentWeight = parseFloat(history[history.length - 1].weight as any) || baseStats.currentWeight;
+            }
+          }
+        }
+
+        // คำนวณความคืบหน้าการทำงานจริงของผู้ใช้ (Workout & Meal)
+        const savedExercises = (await AsyncStorage.getItem('aura_completed_exercises_v2')) || (await AsyncStorage.getItem('aura_completed_exercises'));
+        if (savedExercises) {
+          const completed = JSON.parse(savedExercises);
+          let totalCount = 0;
+          for (const key in completed) {
+            totalCount += completed[key].length;
+          }
+          baseStats.workoutCompletion = Math.min(100, Math.max(50, 60 + totalCount * 2));
+        }
+        
+        const savedMeals = await AsyncStorage.getItem('aura_two_week_meal_plan');
+        if (savedMeals) {
+          baseStats.mealCompletion = Math.min(100, Math.max(40, 78));
+        }
+
+        setUserStats(baseStats);
+        recalculateLeaderboard(baseStats);
+
+        // กำหนดสถานะอินพุตเริ่มต้นเป็นสตริง
+        setInputInitialWeight(String(baseStats.initialWeight));
+        setInputCurrentWeight(String(baseStats.currentWeight));
+        setInputInitialBodyFat(String(baseStats.initialBodyFat));
+        setInputCurrentBodyFat(String(baseStats.currentBodyFat));
+        setInputInitialMuscleMass(String(baseStats.initialMuscleMass));
+        setInputCurrentMuscleMass(String(baseStats.currentMuscleMass));
+      } catch (e) {
+        console.warn(e);
+        recalculateLeaderboard(userStats);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadAllData();
+  }, []);
+
+  // จัดการอัปเดตสตริงและสถานะจัดอันดับ
+  const handleTextChange = (key: keyof MemberStats, val: string) => {
+    // 1. อัปเดตสถานะอินพุตสตริงชั่วคราว เพื่อให้พิมพ์ได้สะดวก
+    if (key === 'initialWeight') setInputInitialWeight(val);
+    else if (key === 'currentWeight') setInputCurrentWeight(val);
+    else if (key === 'initialBodyFat') setInputInitialBodyFat(val);
+    else if (key === 'currentBodyFat') setInputCurrentBodyFat(val);
+    else if (key === 'initialMuscleMass') setInputInitialMuscleMass(val);
+    else if (key === 'currentMuscleMass') setInputCurrentMuscleMass(val);
+
+    // 2. แปลงค่าเป็นตัวเลขเพื่อบันทึกลงในสถิติและจัดอันดับทันที (ถ้ายังป้อนไม่เสร็จหรือไม่ใช่ตัวเลข ให้ใช้ค่า 0 ชั่วคราว)
     const numVal = parseFloat(val);
-    if (isNaN(numVal) && val !== '') return;
-    
+    const safeVal = isNaN(numVal) ? 0 : numVal;
+
     setUserStats((prev) => {
-      const updated = { ...prev, [key]: val === '' ? 0 : numVal };
-      // บันทึกลงใน AsyncStorage
+      const updated = { ...prev, [key]: safeVal };
       AsyncStorage.setItem('aura_user_stats', JSON.stringify(updated)).catch(e => console.warn(e));
-      
-      // คำนวณอันดับใหม่ทันที
       recalculateLeaderboard(updated);
       return updated;
     });
@@ -496,6 +550,12 @@ export default function RankingScreen() {
                 const teamLabel = member.team === 'lose' ? 'ลดน้ำหนัก' : member.team === 'gain' ? 'เพิ่มกล้าม' : 'รักษาสุขภาพ';
                 const teamColor = member.team === 'lose' ? '#EF4444' : member.team === 'gain' ? '#2563EB' : '#10B981';
 
+                // คำนวณ BMI สำหรับการแสดงผลของทีมรักษาสุขภาพ
+                const memberHeight = safeToNumber(member.height, 170);
+                const heightInM = memberHeight / 100;
+                const currentBmi = heightInM > 0 ? safeToNumber(member.currentWeight) / (heightInM * heightInM) : 0;
+                const isBmiEligible = currentBmi >= 18.5 && currentBmi <= 24.9;
+
                 return (
                   <View key={member.id} style={[styles.tableRow, isMe && styles.tableRowHighlight]}>
                     {/* คอลัมน์ที่ 1: อันดับ */}
@@ -510,24 +570,34 @@ export default function RankingScreen() {
                       <Text style={styles.memberNameText}>
                         {member.avatar} {member.name} {isMe && <Text style={styles.meBadge}>คุณ</Text>}
                       </Text>
-                      <Text style={[styles.memberTeamText, { color: teamColor }]}>
-                        ● {teamLabel}
-                      </Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 4, marginTop: 2 }}>
+                        <Text style={[styles.memberTeamText, { color: teamColor }]}>
+                          ● {teamLabel}
+                        </Text>
+                        {member.team === 'maintain' && (
+                          <Text style={[
+                            styles.bmiBadge,
+                            isBmiEligible ? styles.bmiEligibleText : styles.bmiWarningText
+                          ]}>
+                            BMI: {currentBmi.toFixed(1)} {isBmiEligible ? '✅' : '⚠️ ไม่ผ่านเกณฑ์'}
+                          </Text>
+                        )}
+                      </View>
                     </View>
 
                     {/* คอลัมน์ที่ 3: น้ำหนัก */}
                     <View style={[styles.tdCell, styles.thStats]}>
                       <Text style={styles.statsValueText}>
-                        {member.initialWeight.toFixed(1)} ➡️ {member.currentWeight.toFixed(1)} kg
+                        {safeToFixed(member.initialWeight)} ➡️ {safeToFixed(member.currentWeight)} kg
                       </Text>
                       {member.team === 'lose' && (
                         <Text style={[styles.diffText, styles.greenText]}>
-                          ลดลง: {(member.initialWeight - member.currentWeight).toFixed(1)} kg
+                          ลดลง: {safeToFixed(safeToNumber(member.initialWeight) - safeToNumber(member.currentWeight))} kg
                         </Text>
                       )}
                       {member.team === 'gain' && (
                         <Text style={[styles.diffText, styles.blueText]}>
-                          เพิ่มขึ้น: {(member.currentWeight - member.initialWeight).toFixed(1)} kg
+                          เพิ่มขึ้น: {safeToFixed(safeToNumber(member.currentWeight) - safeToNumber(member.initialWeight))} kg
                         </Text>
                       )}
                     </View>
@@ -535,10 +605,10 @@ export default function RankingScreen() {
                     {/* คอลัมน์ที่ 4: เปอร์เซ็นต์ไขมัน & กล้ามเนื้อ */}
                     <View style={[styles.tdCell, styles.thFat]}>
                       <Text style={styles.statsDetailText}>
-                        ไขมัน: {member.initialBodyFat.toFixed(1)}% ➡️ {member.currentBodyFat.toFixed(1)}%
+                        ไขมัน: {safeToFixed(member.initialBodyFat)}% ➡️ {safeToFixed(member.currentBodyFat)}%
                       </Text>
                       <Text style={styles.statsDetailText}>
-                        กล้ามเนื้อ: {member.initialMuscleMass.toFixed(1)} ➡️ {member.currentMuscleMass.toFixed(1)} kg
+                        กล้ามเนื้อ: {safeToFixed(member.initialMuscleMass)} ➡️ {safeToFixed(member.currentMuscleMass)} kg
                       </Text>
                     </View>
 
@@ -599,8 +669,8 @@ export default function RankingScreen() {
                   <Text style={styles.inputLabel}>⚖️ น้ำหนักเริ่มต้น (kg)</Text>
                   <TextInput
                     style={styles.textInput}
-                    value={String(userStats.initialWeight)}
-                    onChangeText={(val) => handleUpdateUserStats('initialWeight', val)}
+                    value={inputInitialWeight}
+                    onChangeText={(val) => handleTextChange('initialWeight', val)}
                     keyboardType="numeric"
                   />
                 </View>
@@ -608,8 +678,8 @@ export default function RankingScreen() {
                   <Text style={styles.inputLabel}>⚖️ น้ำหนักปัจจุบัน (kg)</Text>
                   <TextInput
                     style={styles.textInput}
-                    value={String(userStats.currentWeight)}
-                    onChangeText={(val) => handleUpdateUserStats('currentWeight', val)}
+                    value={inputCurrentWeight}
+                    onChangeText={(val) => handleTextChange('currentWeight', val)}
                     keyboardType="numeric"
                   />
                 </View>
@@ -621,8 +691,8 @@ export default function RankingScreen() {
                   <Text style={styles.inputLabel}>📉 เปอร์เซ็นต์ไขมันเริ่มต้น (%)</Text>
                   <TextInput
                     style={styles.textInput}
-                    value={String(userStats.initialBodyFat)}
-                    onChangeText={(val) => handleUpdateUserStats('initialBodyFat', val)}
+                    value={inputInitialBodyFat}
+                    onChangeText={(val) => handleTextChange('initialBodyFat', val)}
                     keyboardType="numeric"
                   />
                 </View>
@@ -630,8 +700,8 @@ export default function RankingScreen() {
                   <Text style={styles.inputLabel}>📉 เปอร์เซ็นต์ไขมันปัจจุบัน (%)</Text>
                   <TextInput
                     style={styles.textInput}
-                    value={String(userStats.currentBodyFat)}
-                    onChangeText={(val) => handleUpdateUserStats('currentBodyFat', val)}
+                    value={inputCurrentBodyFat}
+                    onChangeText={(val) => handleTextChange('currentBodyFat', val)}
                     keyboardType="numeric"
                   />
                 </View>
@@ -643,8 +713,8 @@ export default function RankingScreen() {
                   <Text style={styles.inputLabel}>🥩 มวลกล้ามเนื้อเริ่มต้น (kg)</Text>
                   <TextInput
                     style={styles.textInput}
-                    value={String(userStats.initialMuscleMass)}
-                    onChangeText={(val) => handleUpdateUserStats('initialMuscleMass', val)}
+                    value={inputInitialMuscleMass}
+                    onChangeText={(val) => handleTextChange('initialMuscleMass', val)}
                     keyboardType="numeric"
                   />
                 </View>
@@ -652,8 +722,8 @@ export default function RankingScreen() {
                   <Text style={styles.inputLabel}>🥩 มวลกล้ามเนื้อปัจจุบัน (kg)</Text>
                   <TextInput
                     style={styles.textInput}
-                    value={String(userStats.currentMuscleMass)}
-                    onChangeText={(val) => handleUpdateUserStats('currentMuscleMass', val)}
+                    value={inputCurrentMuscleMass}
+                    onChangeText={(val) => handleTextChange('currentMuscleMass', val)}
                     keyboardType="numeric"
                   />
                 </View>
@@ -1266,5 +1336,21 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '800',
     color: '#FFFFFF',
+  },
+  bmiBadge: {
+    fontSize: 9,
+    fontWeight: '700',
+    paddingVertical: 1,
+    paddingHorizontal: 4,
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  bmiEligibleText: {
+    backgroundColor: '#D1FAE5',
+    color: '#065F46',
+  },
+  bmiWarningText: {
+    backgroundColor: '#FEE2E2',
+    color: '#991B1B',
   },
 });
