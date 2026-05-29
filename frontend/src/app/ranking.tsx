@@ -173,6 +173,50 @@ export default function RankingScreen() {
   const [leaderboardData, setLeaderboardData] = useState<MemberStats[]>([]);
   const [teamStats, setTeamStats] = useState<Record<string, { averagePotential: number; memberCount: number; color: string; label: string; icon: string }>>({});
   const [isLoading, setIsLoading] = useState(true);
+  const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
+  const [customPlanTable, setCustomPlanTable] = useState<Array<{ day: string; diet: string; workout: string; tip: string }> | null>(null);
+  const [isAiLoading, setIsAiLoading] = useState(false);
+
+  const handleCalculateAiScore = async () => {
+    setIsAiLoading(true);
+    setAiAnalysis(null);
+    setCustomPlanTable(null);
+    try {
+      const token = await AsyncStorage.getItem('@aura_session_token');
+      const response = await fetch('http://localhost:3000/api/user/calculate-score-ai', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ member: userStats })
+      });
+
+      const data = await response.json();
+      if (response.ok && data.success) {
+        setAiAnalysis(data.aiAnalysis);
+        setCustomPlanTable(data.customPlanTable || null);
+        
+        // อัปเดตสถิติคะแนนศักยภาพผู้ใช้ตามที่ AI วิเคราะห์ให้ในหน้ากากตารางจัดอันดับ
+        setUserStats((prev) => {
+          const updated = {
+            ...prev,
+            potentialScore: data.potentialScore
+          };
+          recalculateLeaderboard(updated);
+          return updated;
+        });
+        alert(`🤖 วิเคราะห์สำเร็จ! คะแนนศักยภาพของคุณคือ ${data.potentialScore} คะแนน และออกแบบตารางสุขภาพ 3 วันเรียบร้อยแล้ว`);
+      } else {
+        alert(data.error || 'ไม่สามารถวิเคราะห์ด้วย AI ได้ในขณะนี้');
+      }
+    } catch (err: any) {
+      console.error(err);
+      alert('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์ AI');
+    } finally {
+      setIsAiLoading(false);
+    }
+  };
 
   // ฟังก์ชันคำนวณและอัปเดตตารางคะแนนทั้งหมด
   const recalculateLeaderboard = (currentUser: MemberStats) => {
@@ -310,6 +354,8 @@ export default function RankingScreen() {
     const numVal = parseFloat(val);
     const safeVal = isNaN(numVal) ? 0 : numVal;
 
+    setAiAnalysis(null);
+    setCustomPlanTable(null);
     setUserStats((prev) => {
       const updated = { ...prev, [key]: safeVal };
       AsyncStorage.setItem('aura_user_stats', JSON.stringify(updated)).catch(e => console.warn(e));
@@ -320,6 +366,8 @@ export default function RankingScreen() {
 
   // สลับประเภทความสนใจของผู้ใช้หลัก
   const handleToggleUserTeam = async (teamId: 'lose' | 'gain' | 'maintain') => {
+    setAiAnalysis(null);
+    setCustomPlanTable(null);
     const updated = { ...userStats, team: teamId };
     setUserStats(updated);
     recalculateLeaderboard(updated);
@@ -531,6 +579,85 @@ export default function RankingScreen() {
                   </Pressable>
                 ))}
               </View>
+            </View>
+
+            {/* Gemini AI health Analyzer banner */}
+            <View style={styles.aiContainer}>
+              <View style={styles.aiHeaderRow}>
+                <Text style={styles.aiIcon}>🤖</Text>
+                <View style={{ flex: 1, gap: 2 }}>
+                  <Text style={styles.aiTitle}>Gemini AI Health & Plan Designer</Text>
+                  <Text style={styles.aiSubtitle}>วิเคราะห์เกณฑ์ร่างกายพร้อมออกแบบตารางแผนงานโภชนาการและออกกำลังกาย 3 วันด้วย Gemini AI (คะแนนจัดอันดับยังคงคำนวณด้วยระบบ Rule-based)</Text>
+                </View>
+                <Pressable 
+                  style={[styles.aiButton, isAiLoading && { opacity: 0.7 }]} 
+                  onPress={handleCalculateAiScore}
+                  disabled={isAiLoading}
+                >
+                  {isAiLoading ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                  ) : (
+                    <Text style={styles.aiButtonText}>⚡ วิเคราะห์ด้วย AI</Text>
+                  )}
+                </Pressable>
+              </View>
+              {aiAnalysis && (
+                <View style={styles.aiResultCard}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                    <Text style={{ fontSize: 16 }}>📋</Text>
+                    <Text style={styles.aiResultTitle}>ผลวิเคราะห์สุขภาพจาก Gemini AI</Text>
+                  </View>
+                  <Text style={styles.aiResultText}>{aiAnalysis}</Text>
+
+                  {customPlanTable && customPlanTable.length > 0 && (
+                    <View style={{ marginTop: 16 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                        <Text style={{ fontSize: 16 }}>📅</Text>
+                        <Text style={[styles.aiResultTitle, { color: '#4F46E5' }]}>ตารางแผนงานโภชนาการและออกกำลังกาย 3 วันเฉพาะบุคคล</Text>
+                      </View>
+                      <Text style={{ fontSize: 10, color: '#6B7280', marginBottom: 8, fontStyle: 'italic' }}>
+                        * เลื่อนตารางไปทางขวาเพื่ออ่านข้อมูลทั้งหมด
+                      </Text>
+                      
+                      <ScrollView horizontal={true} showsHorizontalScrollIndicator={true} style={styles.aiTableScroll}>
+                        <View style={styles.aiTable}>
+                          {/* หัวตาราง */}
+                          <View style={styles.aiTableHeader}>
+                            <View style={styles.colDay}><Text style={[styles.aiTableTh, { textAlign: 'center' }]}>วัน</Text></View>
+                            <View style={styles.colDiet}><Text style={styles.aiTableTh}>🥗 แผนโภชนาการ</Text></View>
+                            <View style={styles.colWorkout}><Text style={styles.aiTableTh}>🏃‍♂️ แผนการออกกำลังกาย</Text></View>
+                            <View style={styles.colTip}><Text style={styles.aiTableTh}>💡 เคล็ดลับประจำวัน</Text></View>
+                          </View>
+                          
+                          {/* แถวข้อมูล */}
+                          {customPlanTable.map((row, index) => (
+                            <View 
+                              key={index} 
+                              style={[
+                                styles.aiTableRow, 
+                                index % 2 === 1 && styles.aiTableRowAlternate
+                              ]}
+                            >
+                              <View style={styles.colDay}>
+                                <Text style={[styles.aiTableTd, styles.aiTableTdDay]}>{row.day}</Text>
+                              </View>
+                              <View style={styles.colDiet}>
+                                <Text style={[styles.aiTableTd, styles.aiTableTdDiet]}>{row.diet}</Text>
+                              </View>
+                              <View style={styles.colWorkout}>
+                                <Text style={[styles.aiTableTd, styles.aiTableTdWorkout]}>{row.workout}</Text>
+                              </View>
+                              <View style={styles.colTip}>
+                                <Text style={[styles.aiTableTd, styles.aiTableTdTip]}>{row.tip}</Text>
+                              </View>
+                            </View>
+                          ))}
+                        </View>
+                      </ScrollView>
+                    </View>
+                  )}
+                </View>
+              )}
             </View>
 
             {/* ตารางแสดงผลรายบุคคล */}
@@ -1352,5 +1479,142 @@ const styles = StyleSheet.create({
   bmiWarningText: {
     backgroundColor: '#FEE2E2',
     color: '#991B1B',
+  },
+  aiContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    padding: 20,
+    shadowColor: '#1E40AF',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.02,
+    shadowRadius: 10,
+    elevation: 2,
+    gap: 16,
+  },
+  aiHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    flexWrap: 'wrap',
+  },
+  aiIcon: {
+    fontSize: 32,
+  },
+  aiTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#1F2937',
+  },
+  aiSubtitle: {
+    fontSize: 11,
+    color: '#6B7280',
+    fontWeight: '500',
+    lineHeight: 16,
+  },
+  aiButton: {
+    backgroundColor: '#8B5CF6',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#8B5CF6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  aiButtonText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  aiResultCard: {
+    backgroundColor: '#F5F3FF',
+    borderWidth: 1,
+    borderColor: '#DDD6FE',
+    borderRadius: 16,
+    padding: 16,
+    gap: 8,
+  },
+  aiResultTitle: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#6D28D9',
+  },
+  aiResultText: {
+    fontSize: 12,
+    color: '#4B5563',
+    lineHeight: 18,
+    fontWeight: '500',
+  },
+  aiTableScroll: {
+    marginTop: 12,
+    borderRadius: 12,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  aiTable: {
+    minWidth: 650,
+    backgroundColor: '#FFFFFF',
+  },
+  aiTableHeader: {
+    flexDirection: 'row',
+    backgroundColor: '#F3E8FF',
+    borderBottomWidth: 1.5,
+    borderBottomColor: '#D8B4FE',
+    paddingVertical: 12,
+  },
+  aiTableTh: {
+    color: '#6D28D9',
+    fontSize: 12,
+    fontWeight: '800',
+    paddingHorizontal: 8,
+  },
+  aiTableRow: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  aiTableRowAlternate: {
+    backgroundColor: '#FAFAFD',
+  },
+  aiTableTd: {
+    fontSize: 11,
+    color: '#374151',
+    paddingHorizontal: 8,
+    lineHeight: 16,
+  },
+  aiTableTdDay: {
+    fontWeight: '700',
+    color: '#7C3AED',
+    textAlign: 'center',
+  },
+  aiTableTdDiet: {
+    fontWeight: '500',
+  },
+  aiTableTdWorkout: {
+    fontWeight: '500',
+  },
+  aiTableTdTip: {
+    color: '#4B5563',
+    fontStyle: 'italic',
+  },
+  colDay: {
+    width: 70,
+  },
+  colDiet: {
+    width: 200,
+  },
+  colWorkout: {
+    width: 200,
+  },
+  colTip: {
+    width: 180,
   },
 });
